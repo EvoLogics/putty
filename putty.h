@@ -374,6 +374,10 @@ enum {
     SER_FLOW_NONE, SER_FLOW_XONXOFF, SER_FLOW_RTSCTS, SER_FLOW_DSRDTR
 };
 
+enum {
+    RAW_EOL_CR, RAW_EOL_LF, RAW_EOL_CRLF
+};
+
 /*
  * Tables of string <-> enum value mappings used in settings.c.
  * Defined here so that backends can export their GSS library tables
@@ -815,6 +819,8 @@ void cleanup_exit(int);
     X(INT, NONE, serstopbits) \
     X(INT, NONE, serparity) \
     X(INT, NONE, serflow) \
+    /* Raw options */ \
+    X(INT, NONE, raw_eol) \
     /* Keyboard options */ \
     X(INT, NONE, bksp_is_delete) \
     X(INT, NONE, rxvt_homeend) \
