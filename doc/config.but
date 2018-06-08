@@ -2350,6 +2350,23 @@ some servers prefer to see ^M. If you are seeing surprising
 behaviour when you press Return in a Telnet session, you might try
 turning this option off to see if it helps.
 
+\H{config-raw} The Raw panel
+
+The Raw panel allows you to configure options that only apply to Raw sessions.
+
+Usefull option for raw mode can be \i{local line editing} (\k{config-localedit})
+in conjunction with \i{local echo} (\k{config-localecho}).
+
+\S{config-raw-eol} Change \q{End Of Line} for raw TCP connection
+
+\cfg{winhelp-topic}{raw.eol}
+
+By default in raw mode putty sends \q{End of Line} as CRLF(\c{\\r\\n}). For most cases
+it is enough. You can choose LF(\c{\\n}) to make putty act as \W{https://en.wikipedia.org/wiki/Netcat}{netcat}.
+
+By TCP connection redirecting of \i{Serial} line can be needed send CR(\c{\\r}) as \q{End Of Line}.
+Option \i{Implicit LF in every CR} (\k{config-lfcr}) can be used for convenient displaying of output.
+
 \H{config-rlogin} The Rlogin panel
 
 The \i{Rlogin} panel allows you to configure options that only apply to
