@@ -20,6 +20,7 @@
 #include "misc.h"
 #include "dialog.h"
 
+#include <ShlObj.h>
 #include <commctrl.h>
 
 #define GAPBETWEEN 3
@@ -1657,6 +1658,16 @@ void winctrl_layout(struct dlgparam *dp, struct winctrls *wc,
             data = fontspec_new("", 0, 0, 0);
 	    sfree(escaped);
 	    break;
+	  case CTRL_DIRECTORYSELECT:
+	    num_ids = 3;
+	    escaped = shortcut_escape(ctrl->directoryselect.label,
+				      ctrl->directoryselect.shortcut);
+	    shortcuts[nshortcuts++] = ctrl->directoryselect.shortcut;
+	    editbutton(&pos, escaped, base_id, base_id+1,
+		       "Bro&wse...", base_id+2);
+	    shortcuts[nshortcuts++] = 'w';
+	    sfree(escaped);
+	    break;
 	  default:
 	    assert(!"Can't happen");
 	    num_ids = 0;	       /* placate gcc */
@@ -1985,6 +1996,41 @@ int winctrl_handle_command(struct dlgparam *dp, UINT msg,
 	    }
 	}
 	break;
+      case CTRL_DIRECTORYSELECT:
+      	if (msg == WM_COMMAND && id == 1 &&
+	    (HIWORD(wParam) == EN_SETFOCUS || HIWORD(wParam) == EN_KILLFOCUS))
+	    winctrl_set_focus(ctrl, dp, HIWORD(wParam) == EN_SETFOCUS);
+	if (msg == WM_COMMAND && id == 2 &&
+	    (HIWORD(wParam) == BN_SETFOCUS || HIWORD(wParam) == BN_KILLFOCUS))
+	    winctrl_set_focus(ctrl, dp, HIWORD(wParam) == BN_SETFOCUS);
+	if (msg == WM_COMMAND && id == 1 && HIWORD(wParam) == EN_CHANGE)
+	    ctrl->generic.handler(ctrl, dp, dp->data, EVENT_VALCHANGE);
+	if (id == 2 &&
+	    (msg == WM_COMMAND &&
+	     (HIWORD(wParam) == BN_CLICKED ||
+	      HIWORD(wParam) == BN_DOUBLECLICKED))) {
+		BROWSEINFO bi;
+		char filename[FILENAME_MAX];
+		LPITEMIDLIST folder;
+
+		memset(&bi, 0, sizeof(bi));
+		bi.hwndOwner = dp->hwnd;
+		bi.pszDisplayName = filename;
+		bi.lpszTitle = ctrl->directoryselect.title;
+		bi.ulFlags = BIF_RETURNONLYFSDIRS;
+
+		CoInitialize(NULL);
+		if ((folder = SHBrowseForFolder(&bi))) {
+		    LPMALLOC shmalloc;
+		    if (SHGetPathFromIDList(folder, filename)) {
+			    SetDlgItemText(dp->hwnd, c->base_id + 1, filename);
+			    ctrl->generic.handler(ctrl, dp, dp->data, EVENT_VALCHANGE);
+		    }
+		    SHGetMalloc(&shmalloc);
+		    (*shmalloc->lpVtbl->Free)(shmalloc, folder);
+		}
+	}
+	break;
     }
 
     /*
@@ -2290,6 +2336,10 @@ void dlg_label_change(union control *ctrl, void *dlg, char const *text)
 	escaped = shortcut_escape(text, ctrl->fontselect.shortcut);
 	id = c->base_id;
 	break;
+      case CTRL_DIRECTORYSELECT:
+	escaped = shortcut_escape(text, ctrl->directoryselect.shortcut);
+	id = c->base_id;
+	break;
       default:
 	assert(!"Can't happen");
 	break;
@@ -2352,6 +2402,27 @@ FontSpec *dlg_fontsel_get(union control *ctrl, void *dlg)
     return fontspec_copy((FontSpec *)c->data);
 }
 
+void dlg_directorysel_set(union control *ctrl, void *dlg, Filename *fn)
+{
+    struct dlgparam *dp = (struct dlgparam *)dlg;
+    struct winctrl *c = dlg_findbyctrl(dp, ctrl);
+    assert(c && c->ctrl->generic.type == CTRL_DIRECTORYSELECT);
+    SetDlgItemText(dp->hwnd, c->base_id+1, fn->path);
+}
+
+Filename *dlg_directorysel_get(union control *ctrl, void *dlg)
+{
+    struct dlgparam *dp = (struct dlgparam *)dlg;
+    struct winctrl *c = dlg_findbyctrl(dp, ctrl);
+    char *tmp;
+    Filename *ret;
+    assert(c && c->ctrl->generic.type == CTRL_DIRECTORYSELECT);
+    tmp = GetDlgItemText_alloc(dp->hwnd, c->base_id+1);
+    ret = filename_from_str(tmp);
+    sfree(tmp);
+    return ret;
+}
+
 /*
  * Bracketing a large set of updates in these two functions will
  * cause the front end (if possible) to delay updating the screen
@@ -2402,6 +2473,7 @@ void dlg_set_focus(union control *ctrl, void *dlg)
       case CTRL_LISTBOX: id = c->base_id + 1; break;
       case CTRL_FILESELECT: id = c->base_id + 1; break;
       case CTRL_FONTSELECT: id = c->base_id + 2; break;
+      case CTRL_DIRECTORYSELECT: id = c->base_id + 1; break;
       default: id = c->base_id; break;
     }
     ctl = GetDlgItem(dp->hwnd, id);

@@ -981,6 +981,12 @@ void cleanup_exit(int);
     X(INT, NONE, shadowboldoffset) \
     X(INT, NONE, crhaslf) \
     X(STR, NONE, winclass) \
+    /* Z modem options */ \
+    X(FILENAME, NONE, rzcommand) \
+    X(STR, NONE, rzoptions) \
+    X(FILENAME, NONE, szcommand) \
+    X(STR, NONE, szoptions) \
+    X(FILENAME, NONE, zdownloaddir) \
 
 /* Now define the actual enum of option keywords using that macro. */
 #define CONF_ENUM_DEF(valtype, keytype, keyword) CONF_ ## keyword,
@@ -1414,6 +1420,8 @@ void conf_filesel_handler(union control *ctrl, void *dlg,
 			  void *data, int event);
 void conf_fontsel_handler(union control *ctrl, void *dlg,
 			  void *data, int event);
+void conf_directorysel_handler(union control *ctrl, void *dlg,
+			       void *data, int event);
 void setup_config_box(struct controlbox *b, int midsession,
 		      int protocol, int protcfginfo);
 

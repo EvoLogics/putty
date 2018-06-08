@@ -240,6 +240,9 @@ struct terminal_tag {
 
     unsigned long last_graphic_char;
 
+    int xyz_transfering;
+    struct zModemInternals *xyz_Internals;
+
     /*
      * We maintain a full copy of a Conf here, not merely a pointer
      * to it. That way, when we're passed a new one for
