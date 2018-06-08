@@ -20,7 +20,7 @@
 #include "misc.h"
 #include "dialog.h"
 
-#include <ShlObj.h>
+#include <shlobj.h>
 #include <commctrl.h>
 
 #define GAPBETWEEN 3
