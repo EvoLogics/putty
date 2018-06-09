@@ -94,6 +94,7 @@
 #define WINHELP_CTX_telnet_specialkeys "telnet.specialkeys:config-telnetkey"
 #define WINHELP_CTX_telnet_newline "telnet.newline:config-telnetnl"
 #define WINHELP_CTX_rlogin_localuser "rlogin.localuser:config-rlogin-localuser"
+#define WINHELP_CTX_raw_eol "raw.eol:config-raw-eol"
 #define WINHELP_CTX_ssh_nopty "ssh.nopty:config-ssh-pty"
 #define WINHELP_CTX_ssh_ttymodes "ssh.ttymodes:config-ttymodes"
 #define WINHELP_CTX_ssh_noshell "ssh.noshell:config-ssh-noshell"

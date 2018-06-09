@@ -623,6 +623,7 @@ void save_open_settings(void *sesskey, Conf *conf)
     write_setting_i(sesskey, "TelnetRet", conf_get_int(conf, CONF_telnet_newline));
     write_setting_i(sesskey, "LocalEcho", conf_get_int(conf, CONF_localecho));
     write_setting_i(sesskey, "LocalEdit", conf_get_int(conf, CONF_localedit));
+    write_setting_i(sesskey, "RawEOL", conf_get_int(conf, CONF_raw_eol));
     write_setting_s(sesskey, "Answerback", conf_get_str(conf, CONF_answerback));
     write_setting_i(sesskey, "AlwaysOnTop", conf_get_int(conf, CONF_alwaysontop));
     write_setting_i(sesskey, "FullScreenOnAltEnter", conf_get_int(conf, CONF_fullscreenonaltenter));
@@ -1028,6 +1029,7 @@ void load_open_settings(void *sesskey, Conf *conf)
     gppi(sesskey, "TelnetRet", 1, conf, CONF_telnet_newline);
     gppi(sesskey, "LocalEcho", AUTO, conf, CONF_localecho);
     gppi(sesskey, "LocalEdit", AUTO, conf, CONF_localedit);
+    gppi(sesskey, "RawEOL", RAW_EOL_CRLF, conf, CONF_raw_eol);
     gpps(sesskey, "Answerback", "PuTTY", conf, CONF_answerback);
     gppi(sesskey, "AlwaysOnTop", 0, conf, CONF_alwaysontop);
     gppi(sesskey, "FullScreenOnAltEnter", 0, conf, CONF_fullscreenonaltenter);

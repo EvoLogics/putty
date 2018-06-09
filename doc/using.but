@@ -551,6 +551,9 @@ protocol}\q{Raw}, from the \q{Protocol} buttons in the \q{Session}
 configuration panel. (See \k{config-hostname}.) You can then enter a
 host name and a port number, and make the connection.
 
+For further configuration options (End Of Line), you can use the
+\q{Raw} configuration panel (see \k{config-raw}).
+
 \H{using-serial} Connecting to a local serial line
 
 PuTTY can connect directly to a local serial line as an alternative

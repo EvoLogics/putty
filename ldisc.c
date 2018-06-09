@@ -113,6 +113,7 @@ void ldisc_configure(void *handle, Conf *conf)
     ldisc->protocol = conf_get_int(conf, CONF_protocol);
     ldisc->localecho = conf_get_int(conf, CONF_localecho);
     ldisc->localedit = conf_get_int(conf, CONF_localedit);
+    ldisc->raw_eol = conf_get_int(conf, CONF_raw_eol);
 }
 
 void ldisc_free(void *handle)
@@ -293,7 +294,17 @@ void ldisc_send(void *handle, const void *vbuf, int len, int interactive)
 		    if (ldisc->buflen > 0)
 			ldisc->back->send(ldisc->backhandle, ldisc->buf, ldisc->buflen);
 		    if (ldisc->protocol == PROT_RAW)
-			ldisc->back->send(ldisc->backhandle, "\r\n", 2);
+                        switch (ldisc->raw_eol) {
+                            case RAW_EOL_CR:
+                                ldisc->back->send(ldisc->backhandle, "\r", 1);
+                                break;
+                            case RAW_EOL_LF:
+                                ldisc->back->send(ldisc->backhandle, "\n", 1);
+                                break;
+                            case RAW_EOL_CRLF:
+                                ldisc->back->send(ldisc->backhandle, "\r\n", 2);
+                                break;
+                        }
 		    else if (ldisc->protocol == PROT_TELNET && ldisc->telnet_newline)
 			ldisc->back->special(ldisc->backhandle, TS_EOL);
 		    else

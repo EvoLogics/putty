@@ -2821,4 +2821,22 @@ void setup_config_box(struct controlbox *b, int midsession,
 			  sshbug_handler, I(CONF_sshbug_rsa1));
 	}
     }
+
+    if (!midsession) {
+	/*
+	 * The Connection/Raw panel.
+	 */
+	ctrl_settitle(b, "Connection/Raw",
+		      "Options controlling raw usage");
+
+	s = ctrl_getset(b, "Connection/Raw", "basics", NULL);
+	ctrl_radiobuttons(s, "Raw end of line:", 't', 3,
+			  HELPCTX(raw_eol),
+			  conf_radiobutton_handler,
+			  I(CONF_raw_eol),
+			  "CR", I(RAW_EOL_CR),
+			  "LF", I(RAW_EOL_LF),
+			  "CRLF", I(RAW_EOL_CRLF),
+			  NULL);
+    }
 }
