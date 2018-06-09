@@ -154,6 +154,21 @@ void conf_fontsel_handler(union control *ctrl, void *dlg,
     }
 }
 
+void conf_directorysel_handler(union control *ctrl, void *dlg,
+			       void *data, int event)
+{
+    int key = ctrl->directoryselect.context.i;
+    Conf *conf = (Conf *)data;
+
+    if (event == EVENT_REFRESH) {
+	dlg_directorysel_set(ctrl, dlg, conf_get_filename(conf, key));
+    } else if (event == EVENT_VALCHANGE) {
+	Filename *filename = dlg_directorysel_get(ctrl, dlg);
+	conf_set_filename(conf, key, filename);
+        filename_free(filename);
+    }
+}
+
 static void config_host_handler(union control *ctrl, void *dlg,
 				void *data, int event)
 {
@@ -2839,4 +2854,37 @@ void setup_config_box(struct controlbox *b, int midsession,
 			  "CRLF", I(RAW_EOL_CRLF),
 			  NULL);
     }
+
+    // z-modem panel
+    ctrl_settitle(b, "Connection/ZModem",
+	    "Options controlling Z Modem transfers");
+
+    s = ctrl_getset(b, "Connection/ZModem", "receive",
+	    "Receive command");
+    ctrl_filesel(s, "Command:", NO_SHORTCUT,
+	    FILTER_EXE_FILES, FALSE, "Select command to receive zmodem data",
+	    HELPCTX(zmodem_rzcommand),
+	    conf_filesel_handler, I(CONF_rzcommand));
+    ctrl_editbox(s, "Options", NO_SHORTCUT, 50,
+	    HELPCTX(zmodem_rzoptions),
+	    conf_editbox_handler, I(CONF_rzoptions),
+	    I(50)); // TODO: I don't know what the last param does
+
+    s = ctrl_getset(b, "Connection/ZModem", "send",
+			"Send command");
+    ctrl_filesel(s, "Command:", NO_SHORTCUT,
+	    FILTER_EXE_FILES, FALSE, "Select command to send zmodem data",
+	    HELPCTX(zmodem_szcommand),
+	    conf_filesel_handler, I(CONF_szcommand));
+    ctrl_editbox(s, "Options", NO_SHORTCUT, 50,
+	    HELPCTX(zmodem_szoptions),
+	    conf_editbox_handler, I(CONF_szoptions),
+	    I(50)); // TODO: I don't know what the last param does
+
+    s = ctrl_getset(b, "Connection/ZModem", "download",
+	    "Download folder");
+    ctrl_directorysel(s, "Location:", NO_SHORTCUT,
+	    "Select location for downloading files",
+	    HELPCTX(zmodem_zdownloaddir),
+	    conf_directorysel_handler, I(CONF_zdownloaddir));
 }
