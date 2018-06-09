@@ -756,6 +756,12 @@ void save_open_settings(void *sesskey, Conf *conf)
     write_setting_i(sesskey, "ConnectionSharingUpstream", conf_get_int(conf, CONF_ssh_connection_sharing_upstream));
     write_setting_i(sesskey, "ConnectionSharingDownstream", conf_get_int(conf, CONF_ssh_connection_sharing_downstream));
     wmap(sesskey, "SSHManualHostKeys", conf, CONF_ssh_manual_hostkeys, FALSE);
+    /* z-modem settings */
+    write_setting_filename(sesskey, "rzCommand", conf_get_filename(conf, CONF_rzcommand));
+    write_setting_s(sesskey, "rzOptions", conf_get_str(conf, CONF_rzoptions));
+    write_setting_filename(sesskey, "szCommand", conf_get_filename(conf, CONF_szcommand));
+    write_setting_s(sesskey, "szOptions", conf_get_str(conf, CONF_szoptions));
+    write_setting_filename(sesskey, "zDownloadDir", conf_get_filename(conf, CONF_zdownloaddir));
 }
 
 void load_settings(const char *section, Conf *conf)
@@ -1211,6 +1217,12 @@ void load_open_settings(void *sesskey, Conf *conf)
     gppi(sesskey, "ConnectionSharingUpstream", 1, conf, CONF_ssh_connection_sharing_upstream);
     gppi(sesskey, "ConnectionSharingDownstream", 1, conf, CONF_ssh_connection_sharing_downstream);
     gppmap(sesskey, "SSHManualHostKeys", conf, CONF_ssh_manual_hostkeys);
+    /* z-modem settings */
+    gppfile(sesskey, "rzCommand", conf, CONF_rzcommand);
+    gpps(sesskey, "rzOptions", "-e -v", conf, CONF_rzoptions);
+    gppfile(sesskey, "szCommand", conf, CONF_szcommand);
+    gpps(sesskey, "szOptions", "-e -v", conf, CONF_szoptions);
+    gppfile(sesskey, "zDownloadDir", conf, CONF_zdownloaddir);
 }
 
 void do_defaults(const char *session, Conf *conf)

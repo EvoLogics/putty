@@ -416,6 +416,18 @@ union control *ctrl_filesel(struct controlset *s, const char *label,
     return c;
 }
 
+union control *ctrl_directorysel(struct controlset *s,char *label,char shortcut,
+			         char *title,
+			         intorptr helpctx, handler_fn handler,
+			         intorptr context)
+{
+    union control *c = ctrl_new(s, CTRL_DIRECTORYSELECT, helpctx, handler, context);
+    c->directoryselect.label = label ? dupstr(label) : NULL;
+    c->directoryselect.shortcut = shortcut;
+    c->directoryselect.title = dupstr(title);
+    return c;
+}
+
 union control *ctrl_fontsel(struct controlset *s, const char *label,
                             char shortcut, intorptr helpctx,
                             handler_fn handler, intorptr context)
@@ -471,6 +483,9 @@ void ctrl_free(union control *ctrl)
 	sfree(ctrl->listbox.percentages);
 	break;
       case CTRL_FILESELECT:
+	sfree(ctrl->fileselect.title);
+	break;
+      case CTRL_DIRECTORYSELECT:
 	sfree(ctrl->fileselect.title);
 	break;
     }

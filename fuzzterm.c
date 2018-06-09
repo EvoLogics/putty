@@ -177,6 +177,11 @@ Filename *platform_default_filename(const char *name)
 {
     if (!strcmp(name, "LogFileName"))
 	return filename_from_str("putty.log");
+    else if (!strcmp(name, "rzCommand"))
+	return filename_from_str("rz");
+    else if (!strcmp(name, "szCommand"))
+	return filename_from_str("sz");
+    /* TODO: zDownloadDir */
     else
 	return filename_from_str("");
 }

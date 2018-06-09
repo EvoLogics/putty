@@ -71,6 +71,8 @@ const char *EMPTY_WINDOW_TITLE = "";
 
 const char sco2ansicolour[] = { 0, 4, 2, 6, 1, 5, 3, 7 };
 
+int xyz_ReceiveData(Terminal *term, const char *buffer, int len);
+
 #define sel_nl_sz  (sizeof(sel_nl)/sizeof(wchar_t))
 const wchar_t sel_nl[] = SEL_NL;
 
@@ -1725,6 +1727,8 @@ Terminal *term_init(Conf *myconf, struct unicode_data *ucsdata,
     term->n_mouse_select_clipboards = 1;
     term->mouse_paste_clipboard = CLIP_NULL;
 
+    term->xyz_transfering = 0;
+    term->xyz_Internals = NULL;
     return term;
 }
 
@@ -6631,19 +6635,26 @@ int term_ldisc(Terminal *term, int option)
 
 int term_data(Terminal *term, int is_stderr, const void *data, int len)
 {
-    bufchain_add(&term->inbuf, data, len);
+    if (term->xyz_transfering && !is_stderr)
+    {
+	return xyz_ReceiveData(term, data, len);
+    }
+    else
+    {
+	bufchain_add(&term->inbuf, data, len);
 
-    if (!term->in_term_out) {
-	term->in_term_out = TRUE;
-	term_reset_cblink(term);
-	/*
-	 * During drag-selects, we do not process terminal input,
-	 * because the user will want the screen to hold still to
-	 * be selected.
-	 */
-	if (term->selstate != DRAGGING)
-	    term_out(term);
-	term->in_term_out = FALSE;
+	if (!term->in_term_out) {
+	    term->in_term_out = TRUE;
+	    term_reset_cblink(term);
+	    /*
+	     * During drag-selects, we do not process terminal input,
+	     * because the user will want the screen to hold still to
+	     * be selected.
+	     */
+	    if (term->selstate != DRAGGING)
+		term_out(term);
+	    term->in_term_out = FALSE;
+	}
     }
 
     /*
