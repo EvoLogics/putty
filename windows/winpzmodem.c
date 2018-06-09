@@ -2,12 +2,16 @@
 #include "terminal.h"
 #include <windows.h>
 #include <time.h>
+#include <shlwapi.h>
 
 void xyz_updateMenuItems(Terminal *term);
 
 void xyz_ReceiveInit(Terminal *term);
 int xyz_ReceiveData(Terminal *term, const char *buffer, int len);
-static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *inparams);
+static int xyz_SpawnProcess(Terminal *term, const char *incommand, char *inparams);
+
+static char *get_program_path(void);
+static char *get_exe_name(const char *exe);
 
 #define MAX_UPLOAD_FILES 512
 
@@ -27,6 +31,42 @@ static int IsWinNT()
 	GetVersionEx(&osv);
 	return (osv.dwPlatformId == VER_PLATFORM_WIN32_NT);
 }
+
+char *get_program_path(void)
+{
+        static char putty_path[MAX_PATH] = {0};
+        char *p, *q = putty_path;
+
+	if (putty_path[0] != 0)
+		return putty_path;
+
+	GetModuleFileName(NULL, putty_path, sizeof(putty_path) - 1);
+
+        if ((p = strrchr(q, '\\')) != NULL)
+		q = p + 1;
+        if ((p = strrchr(q, ':'))  != NULL)
+		q = p + 1;
+	*q = 0;
+
+	return putty_path;
+}
+
+char *get_exe_name(const char *exe)
+{
+	static char cmd[MAX_PATH];
+
+	strncpy(cmd, exe, sizeof(cmd));
+	if (PathIsRelative(exe)) {
+		FILE *fp;
+		snprintf(cmd, sizeof(cmd), "%s\\%s", get_program_path(), exe);
+		if ((fp = fopen(cmd, "r")) != NULL) {
+			fclose(fp);
+		}
+	}
+
+	return cmd;
+}
+
 
 void xyz_Done(Terminal *term)
 {
@@ -151,7 +191,7 @@ static int xyz_Check(Backend *back, void *backhandle, Terminal *term, int outerr
 
 void xyz_ReceiveInit(Terminal *term)
 {
-	const char *prog   = filename_to_str(conf_get_filename(term->conf, CONF_rzcommand));
+	const char *prog = get_exe_name(filename_to_str(conf_get_filename(term->conf, CONF_rzcommand)));
 	char *params = conf_get_str(term->conf, CONF_rzoptions);
 	if (!xyz_SpawnProcess(term, prog, params)) {
 		nonfatal("Unable to start receiving '%s' with parameters '%s': %s"
@@ -199,7 +239,7 @@ void xyz_StartSending(Terminal *term)
 				curparams += sprintf(curparams, " \"%s\\%s\"", filenames, p);
 			}
 		}
-		prog = filename_to_str(conf_get_filename(term->conf, CONF_szcommand));
+		prog = get_exe_name(filename_to_str(conf_get_filename(term->conf, CONF_szcommand)));
 
 		if (!xyz_SpawnProcess(term, prog, sz_full_params)) {
 			nonfatal("Unable to start sending '%s' with parameters '%s': %s"
@@ -215,7 +255,7 @@ void xyz_Cancel(Terminal *term)
 	xyz_Done(term);
 }
 
-static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *inparams)
+static int xyz_SpawnProcess(Terminal *term, const char *incommand, char *inparams)
 {
 	STARTUPINFO si;
 	SECURITY_ATTRIBUTES sa;
@@ -308,20 +348,9 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 
 	//spawn the child process
 	{
-		char params[1204];
-		const char *p;
-
-		p = incommand + strlen(incommand);
-		while (p != incommand) {
-			if (*p == '\\' || *p == ' ') { // no space in name either
-				p++;
-				break;
-			}
-			p--;
-		}
-		sprintf(params, "%s %s", p, inparams);
-
-		if (!CreateProcess(incommand,params,NULL, NULL,TRUE,CREATE_NEW_CONSOLE, NULL,filename_to_str(conf_get_filename(term->conf, CONF_zdownloaddir)),&si,&term->xyz_Internals->pi))
+		if (!CreateProcess(incommand, inparams, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL,
+				filename_to_str(conf_get_filename(term->conf, CONF_zdownloaddir)),
+				&si, &term->xyz_Internals->pi))
 		{
 			CloseHandle(newstdin);
 			CloseHandle(term->xyz_Internals->write_stdin);
