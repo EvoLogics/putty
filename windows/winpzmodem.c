@@ -151,7 +151,12 @@ static int xyz_Check(Backend *back, void *backhandle, Terminal *term, int outerr
 
 void xyz_ReceiveInit(Terminal *term)
 {
-	if (xyz_SpawnProcess(term, filename_to_str(conf_get_filename(term->conf, CONF_rzcommand)), conf_get_str(term->conf, CONF_rzoptions)) == 0) {
+	const char *prog   = filename_to_str(conf_get_filename(term->conf, CONF_rzcommand));
+	char *params = conf_get_str(term->conf, CONF_rzoptions);
+	if (!xyz_SpawnProcess(term, prog, params)) {
+		nonfatal("Unable to start receiving '%s' with parameters '%s': %s"
+			, prog, params, win_strerror(GetLastError()));
+	} else {
 		term->xyz_transfering = 1;
 	}
 }
@@ -176,6 +181,7 @@ void xyz_StartSending(Terminal *term)
 	{
 		char sz_full_params[32767];
 		char *p, *curparams;
+		const char *prog;
 		p = filenames;
 
 		curparams = sz_full_params;
@@ -193,7 +199,12 @@ void xyz_StartSending(Terminal *term)
 				curparams += sprintf(curparams, " \"%s\\%s\"", filenames, p);
 			}
 		}
-		if (xyz_SpawnProcess(term, filename_to_str(conf_get_filename(term->conf, CONF_szcommand)), sz_full_params) == 0) {
+		prog = filename_to_str(conf_get_filename(term->conf, CONF_szcommand));
+
+		if (!xyz_SpawnProcess(term, prog, sz_full_params)) {
+			nonfatal("Unable to start sending '%s' with parameters '%s': %s"
+				, prog, sz_full_params, win_strerror(GetLastError()));
+		} else {
 			term->xyz_transfering = 1;
 		}
 	}
@@ -209,11 +220,7 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 	STARTUPINFO si;
 	SECURITY_ATTRIBUTES sa;
 	SECURITY_DESCRIPTOR sd;               //security information for pipes
-	
 	HANDLE read_stdout, read_stderr, write_stdin, newstdin, newstdout, newstderr; //pipe handles
-
-	
-	
 	
 	term->xyz_Internals = (struct zModemInternals *)smalloc(sizeof(struct zModemInternals));
 	memset(term->xyz_Internals, 0, sizeof(struct zModemInternals));
@@ -227,16 +234,16 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 	else sa.lpSecurityDescriptor = NULL;
 	sa.nLength = sizeof(SECURITY_ATTRIBUTES);
 	sa.bInheritHandle = TRUE;         //allow inheritable handles
-	
+
 	if (!CreatePipe(&newstdin,&write_stdin,&sa,PIPE_SIZE))   //create stdin pipe
 	{
-		return 1;
+		return 0;
 	}
 	if (!CreatePipe(&read_stdout,&newstdout,&sa,PIPE_SIZE))  //create stdout pipe
 	{
 		CloseHandle(newstdin);
 		CloseHandle(write_stdin);
-		return 1;
+		return 0;
 	}
 	if (!CreatePipe(&read_stderr,&newstderr,&sa,PIPE_SIZE))  //create stdout pipe
 	{
@@ -244,9 +251,8 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 		CloseHandle(write_stdin);
 		CloseHandle(newstdout);
 		CloseHandle(read_stdout);
-		return 1;
+		return 0;
 	}
-
 	
 	GetStartupInfo(&si);      //set startupinfo for the spawned process
 				  /*
@@ -260,7 +266,6 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 	si.hStdError = newstderr;     //set the new handles for the child process
 	si.hStdInput = newstdin;
 
-	
 	//system
 	if (!DuplicateHandle(GetCurrentProcess(), read_stdout, GetCurrentProcess(), &term->xyz_Internals->read_stdout, 0, FALSE, DUPLICATE_SAME_ACCESS))
 	{
@@ -270,7 +275,7 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 		CloseHandle(read_stdout);
 		CloseHandle(newstderr);
 		CloseHandle(read_stderr);
-		return 1;
+		return 0;
 	}
 
 	CloseHandle(read_stdout);
@@ -283,7 +288,7 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 		CloseHandle(write_stdin);
 		CloseHandle(newstderr);
 		CloseHandle(read_stderr);
-		return 1;
+		return 0;
 	}
 
 	CloseHandle(read_stderr);
@@ -296,11 +301,11 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 		CloseHandle(term->xyz_Internals->read_stdout);
 		CloseHandle(newstderr);
 		CloseHandle(term->xyz_Internals->read_stderr);
-		return 1;
+		return 0;
 	}
 
 	CloseHandle(write_stdin);
-	
+
 	//spawn the child process
 	{
 		char params[1204];
@@ -318,15 +323,13 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 
 		if (!CreateProcess(incommand,params,NULL, NULL,TRUE,CREATE_NEW_CONSOLE, NULL,filename_to_str(conf_get_filename(term->conf, CONF_zdownloaddir)),&si,&term->xyz_Internals->pi))
 		{
-			//DWORD err = GetLastError();
-	//		ErrorMessage("CreateProcess");
 			CloseHandle(newstdin);
 			CloseHandle(term->xyz_Internals->write_stdin);
 			CloseHandle(newstdout);
 			CloseHandle(term->xyz_Internals->read_stdout);
 			CloseHandle(newstderr);
 			CloseHandle(term->xyz_Internals->read_stderr);
-			return 1;
+			return 0;
 		}
 	}
 
@@ -334,7 +337,7 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, const char *i
 	CloseHandle(newstdout);
 	CloseHandle(newstderr);
 
-	return 0;
+	return 1;
 }
 
 int xyz_ReceiveData(Terminal *term, const char *buffer, int len)
