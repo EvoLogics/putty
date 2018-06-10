@@ -8,6 +8,7 @@
 #include <time.h>
 
 void xyz_updateMenuItems(Terminal *term);
+void xyz_updateTitle(Terminal *term);
 
 void xyz_ReceiveInit(Terminal *term);
 int xyz_ReceiveData(Terminal *term, const char *buffer, int len);
@@ -77,6 +78,7 @@ void xyz_Done(Terminal *term)
 	if (term->xyz_transfering != 0) {
 		term->xyz_transfering = 0;
 		xyz_updateMenuItems(term);
+		xyz_updateTitle(term);
 
 		if (term->xyz_Internals) {
 			DWORD exitcode = 0;

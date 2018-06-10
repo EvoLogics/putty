@@ -119,6 +119,7 @@ static void process_clipdata(HGLOBAL clipdata, int unicode);
 static void setup_clipboards(Terminal *, Conf *);
 
 void xyz_updateMenuItems(Terminal *term);
+void xyz_updateTitle(Terminal *term);
 
 /* Window layout information */
 static void reset_window(int);
@@ -2425,14 +2426,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	  case IDM_XYZSTART:
 	    xyz_ReceiveInit(term);
 	    xyz_updateMenuItems(term);
+	    xyz_updateTitle(term);
 	    break;
 	  case IDM_XYZUPLOAD:
 	    xyz_StartSending(term);
 	    xyz_updateMenuItems(term);
+	    xyz_updateTitle(term);
 	    break;
 	  case IDM_XYZABORT:
 	    xyz_Cancel(term);
 	    xyz_updateMenuItems(term);
+	    xyz_updateTitle(term);
 	    break;
 	  default:
 	    if (wParam >= IDM_SAVED_MIN && wParam < IDM_SAVED_MAX) {
@@ -5994,4 +5998,29 @@ void xyz_updateMenuItems(Terminal *term)
 		   term->xyz_transfering?MF_GRAYED:MF_ENABLED);
     EnableMenuItem(m, IDM_XYZABORT,
 		   !term->xyz_transfering?MF_GRAYED:MF_ENABLED);
+}
+
+void xyz_updateTitle(Terminal *term) {
+    char *new_title;
+
+    if (term->xyz_transfering) {
+	new_title = dupcat(get_window_title(NULL, TRUE), " (XModem transfer)");
+	if (new_title) {
+		set_icon(NULL, new_title);
+		set_title(NULL, new_title);
+		sfree(new_title);
+	}
+	return;
+    }
+
+    new_title = dupstr(get_window_title(NULL, TRUE));
+    if (new_title) {
+	char *p = strrchr(new_title, '(');
+	if (p) {
+		*(p - 1) = 0;
+		set_icon(NULL, new_title);
+		set_title(NULL, new_title);
+	}
+	sfree(new_title);
+    }
 }
