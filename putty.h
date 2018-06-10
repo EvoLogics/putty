@@ -986,6 +986,8 @@ void cleanup_exit(int);
     X(STR, NONE, rzoptions) \
     X(FILENAME, NONE, szcommand) \
     X(STR, NONE, szoptions) \
+    X(STR, NONE, rzremotecommand) \
+    X(INT, NONE, rzremotecommand_enable) \
     X(FILENAME, NONE, zdownloaddir) \
 
 /* Now define the actual enum of option keywords using that macro. */

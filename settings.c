@@ -761,6 +761,8 @@ void save_open_settings(void *sesskey, Conf *conf)
     write_setting_s(sesskey, "rzOptions", conf_get_str(conf, CONF_rzoptions));
     write_setting_filename(sesskey, "szCommand", conf_get_filename(conf, CONF_szcommand));
     write_setting_s(sesskey, "szOptions", conf_get_str(conf, CONF_szoptions));
+    write_setting_s(sesskey, "rzRemoteCommand", conf_get_str(conf, CONF_rzremotecommand));
+    write_setting_i(sesskey, "rzRemoteCommandEnable", conf_get_int(conf, CONF_rzremotecommand_enable));
     write_setting_filename(sesskey, "zDownloadDir", conf_get_filename(conf, CONF_zdownloaddir));
 }
 
@@ -1222,6 +1224,8 @@ void load_open_settings(void *sesskey, Conf *conf)
     gpps(sesskey, "rzOptions", "-e -v", conf, CONF_rzoptions);
     gppfile(sesskey, "szCommand", conf, CONF_szcommand);
     gpps(sesskey, "szOptions", "-e -v", conf, CONF_szoptions);
+    gpps(sesskey, "rzRemoteCommand", "rz -e", conf, CONF_rzremotecommand);
+    gppi(sesskey, "rzRemoteCommandEnable", 1, conf, CONF_rzremotecommand_enable);
     gppfile(sesskey, "zDownloadDir", conf, CONF_zdownloaddir);
 }
 

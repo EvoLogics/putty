@@ -2880,6 +2880,14 @@ void setup_config_box(struct controlbox *b, int midsession,
 	    HELPCTX(zmodem_szoptions),
 	    conf_editbox_handler, I(CONF_szoptions),
 	    I(50)); // TODO: I don't know what the last param does
+    ctrl_checkbox(s, "Enable sending remote command", 'r',
+	    HELPCTX(zmodem_rzremotecommand_enable),
+	    conf_checkbox_handler,
+	    I(CONF_rzremotecommand_enable));
+    ctrl_editbox(s, "Remote command:", NO_SHORTCUT, 50,
+	    HELPCTX(zmodem_rzremotecommand),
+	    conf_editbox_handler, I(CONF_rzremotecommand),
+	    I(2));
 
     s = ctrl_getset(b, "Connection/ZModem", "download",
 	    "Download folder");

@@ -163,6 +163,8 @@
 #define WINHELP_CTX_zmodem_rzoptions "zmodem.rzoptions"
 #define WINHELP_CTX_zmodem_szcommand "zmodem.szcommand"
 #define WINHELP_CTX_zmodem_szoptions "zmodem.szoptions"
+#define WINHELP_CTX_zmodem_rzremotecommand "zmodem.rzremotecommand"
+#define WINHELP_CTX_zmodem_rzremotecommand_enable "zmodem.rzremotecommand-enable"
 #define WINHELP_CTX_zmodem_zdownloaddir "zmodem.zdownloaddir"
 #define WINHELP_CTX_serial_line "serial.line:config-serial-line"
 #define WINHELP_CTX_serial_speed "serial.speed:config-serial-speed"

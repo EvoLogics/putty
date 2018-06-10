@@ -1,8 +1,11 @@
 #include "putty.h"
 #include "terminal.h"
+
 #include <windows.h>
-#include <time.h>
 #include <shlwapi.h>
+
+#include <assert.h>
+#include <time.h>
 
 void xyz_updateMenuItems(Terminal *term);
 
@@ -22,6 +25,7 @@ struct zModemInternals {
 	HANDLE read_stdout;
 	HANDLE read_stderr;
 	HANDLE write_stdin;
+	BOOL remote_command_sent;
 };
 
 static int IsWinNT()
@@ -94,6 +98,23 @@ static int xyz_Check(Backend *back, void *backhandle, Terminal *term, int outerr
 
 int xyz_Process(Backend *back, void *backhandle, Terminal *term)
 {
+	if (conf_get_int(term->conf, CONF_rzremotecommand_enable) && back->protocol != PROT_RAW) {
+		if (term->xyz_Internals && !term->xyz_Internals->remote_command_sent) {
+			char *rz_remote = conf_get_str(term->conf, CONF_rzremotecommand);
+
+			back->send(backhandle, rz_remote, strlen(rz_remote));
+
+			switch (back->protocol) {
+				case PROT_SERIAL: back->send(backhandle, "\r", 1);   break;
+				case PROT_SSH: 	  back->send(backhandle, "\n", 1);   break;
+				case PROT_TELNET:
+				case PROT_RLOGIN: back->send(backhandle, "\r\n", 2); break;
+				default: assert(!"Wrong protocol");
+			}
+			term->xyz_Internals->remote_command_sent = TRUE;
+		}
+	}
+
 	return xyz_Check(back, backhandle, term, 0) + xyz_Check(back, backhandle, term, 1);
 }
 
@@ -247,6 +268,7 @@ void xyz_StartSending(Terminal *term)
 		} else {
 			term->xyz_transfering = 1;
 		}
+		term->xyz_Internals->remote_command_sent = FALSE;
 	}
 }
 
@@ -264,6 +286,7 @@ static int xyz_SpawnProcess(Terminal *term, const char *incommand, char *inparam
 	
 	term->xyz_Internals = (struct zModemInternals *)smalloc(sizeof(struct zModemInternals));
 	memset(term->xyz_Internals, 0, sizeof(struct zModemInternals));
+	term->xyz_Internals->remote_command_sent = TRUE;
 
 	if (IsWinNT())        //initialize security descriptor (Windows NT)
 	{
