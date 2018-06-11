@@ -1644,7 +1644,8 @@ void winctrl_layout(struct dlgparam *dp, struct winctrls *wc,
 				      ctrl->fileselect.shortcut);
 	    shortcuts[nshortcuts++] = ctrl->fileselect.shortcut;
 	    editbutton(&pos, escaped, base_id, base_id+1,
-		       "Browse...", base_id+2);
+		       "Bro&wse...", base_id+2);
+	    shortcuts[nshortcuts++] = 'w';
 	    sfree(escaped);
 	    break;
 	  case CTRL_FONTSELECT:

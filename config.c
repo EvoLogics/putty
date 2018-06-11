@@ -2855,6 +2855,8 @@ void setup_config_box(struct controlbox *b, int midsession,
 			  NULL);
     }
 
+#ifdef _WINDOWS
+    /* TODO: not yet implemented */
     // z-modem panel
     ctrl_settitle(b, "Connection/ZModem",
 	    "Options controlling Z Modem transfers");
@@ -2895,4 +2897,5 @@ void setup_config_box(struct controlbox *b, int midsession,
 	    "Select location for downloading files",
 	    HELPCTX(zmodem_zdownloaddir),
 	    conf_directorysel_handler, I(CONF_zdownloaddir));
+#endif
 }

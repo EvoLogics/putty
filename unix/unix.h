@@ -83,6 +83,7 @@ extern Backend pty_backend;
 #define HELPCTX(x) P(NULL)
 #define FILTER_KEY_FILES NULL          /* FIXME */
 #define FILTER_DYNLIB_FILES NULL       /* FIXME */
+#define FILTER_EXE_FILES NULL          /* FIXME */
 
 /*
  * Under X, selection data must not be NUL-terminated.

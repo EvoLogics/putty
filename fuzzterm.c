@@ -127,6 +127,8 @@ void dlg_filesel_set(union control *ctrl, void *dlg, Filename *fn) { }
 Filename *dlg_filesel_get(union control *ctrl, void *dlg) { return NULL; }
 void dlg_fontsel_set(union control *ctrl, void *dlg, FontSpec *fn) { }
 FontSpec *dlg_fontsel_get(union control *ctrl, void *dlg) { return NULL; }
+void dlg_directorysel_set(union control *ctrl, void *dlg, FontSpec *fn) { }
+FontSpec *dlg_directorysel_get(union control *ctrl, void *dlg) { return NULL; }
 void dlg_update_start(union control *ctrl, void *dlg) { }
 void dlg_update_done(union control *ctrl, void *dlg) { }
 void dlg_set_focus(union control *ctrl, void *dlg) { }
@@ -140,6 +142,7 @@ void dlg_coloursel_start(union control *ctrl, void *dlg,
 int dlg_coloursel_results(union control *ctrl, void *dlg,
 			  int *r, int *g, int *b) { return 0; }
 void dlg_refresh(union control *ctrl, void *dlg) { }
+int xyz_ReceiveData(Terminal *term, const char *buffer, int len) { return 0; }
 
 /* miscellany */
 void logevent(void *frontend, const char *msg) { }
