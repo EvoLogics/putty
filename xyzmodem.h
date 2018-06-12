@@ -5,12 +5,14 @@
 
 int  xyzmodem_handle(Backend *back, void *backhandle, Terminal *term);
 void xyzmodem_download(Terminal *term);
-void xyzmodem_upload(Terminal *term);
+void xyzmodem_upload(Terminal *term, char* filelist);
 void xyzmodem_abort(Terminal *term);
 
 void xyzmodem_update_ui(Terminal *term);
 void xyzmodem_update_menu(Terminal *term);
 void xyzmodem_update_title(Terminal *term);
+
+char* xyzmodem_upload_files_request();
 
 int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len);
 

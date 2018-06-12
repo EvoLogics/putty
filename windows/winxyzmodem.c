@@ -130,57 +130,6 @@ int xyzmodem_check(Backend *back, void *backhandle, Terminal *term, int outerr)
 	return 0;
 }
 
-void xyzmodem_upload(Terminal *term)
-{
-	OPENFILENAME fn;
-	char filenames[32000];
-	BOOL res;
-
-	memset(&fn, 0, sizeof(fn));
-	memset(filenames, 0, sizeof(filenames));
-	fn.lStructSize = sizeof(fn);
-	fn.lpstrFile = filenames;
-	fn.nMaxFile = sizeof(filenames) - 1; /* the missing -1 was causing a crash on very long selections */
-	fn.lpstrTitle = "Select files to upload...";
-	fn.Flags = OFN_ALLOWMULTISELECT | OFN_CREATEPROMPT | OFN_ENABLESIZING |
-		   OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
-
-	res = GetOpenFileName(&fn);
-
-	if (res)
-	{
-		char full_params[32767];
-		char *p, *curparams;
-		const char *prog;
-		p = filenames;
-
-		curparams = full_params;
-		full_params[0] = 0;
-
-		curparams += sprintf(curparams, "%s", conf_get_str(term->conf, CONF_xyzmodem_upload_options));
-
-		if (*(p + strlen(filenames) + 1) == 0) {
-			sprintf(curparams, " \"%s\"", filenames);
-		} else {
-			for (;;) {
-				p=p + strlen(p) + 1;
-				if (*p == 0)
-					break;
-				curparams += sprintf(curparams, " \"%s\\%s\"", filenames, p);
-			}
-		}
-		prog = get_prog_name(filename_to_str(conf_get_filename(term->conf, CONF_xyzmodem_upload_command)));
-
-		if (!xyzmodem_spawn(term, prog, full_params)) {
-			nonfatal("Unable to start sending '%s' with parameters '%s': %s"
-				, prog, full_params, xyzmodem_last_error());
-		} else {
-			term->xyzmodem_xfer = 1;
-		}
-		term->xyzmodem_remote_command_sent = FALSE;
-	}
-}
-
 int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
 {
 	STARTUPINFO si;

@@ -2421,9 +2421,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	    xyzmodem_update_ui(term);
 	    break;
 	  case IDM_XYZUPLOAD:
-	    xyzmodem_upload(term);
-	    xyzmodem_update_ui(term);
-	    break;
+	    {
+		char *filelist = xyzmodem_upload_files_request();
+		xyzmodem_upload(term, filelist);
+		sfree(filelist);
+
+		xyzmodem_update_ui(term);
+		break;
+	    }
 	  case IDM_XYZABORT:
 	    xyzmodem_abort(term);
 	    xyzmodem_update_ui(term);
@@ -5987,3 +5992,23 @@ void xyzmodem_update_menu(Terminal *term)
     EnableMenuItem(m, IDM_XYZABORT,   !term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED);
 }
 
+char* xyzmodem_upload_files_request(Terminal *term)
+{
+	OPENFILENAME of;
+	char *filelist = snewn(32000, char);
+
+	memset(&of, 0, sizeof(of));
+	*filelist = '\0';
+	of.lStructSize = sizeof(of);
+	of.lpstrFile = filelist;
+	of.nMaxFile = 32000;
+	of.lpstrTitle = "Select files to upload...";
+	of.Flags = OFN_ALLOWMULTISELECT | OFN_CREATEPROMPT | OFN_ENABLESIZING |
+		   OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+
+	if (!request_file(NULL, &of, TRUE, FALSE)) {
+		sfree(filelist);
+		return NULL;
+	}
+	return filelist;
+}
