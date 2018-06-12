@@ -25,11 +25,7 @@
 #include "win_res.h"
 #include "winsecur.h"
 #include "tree234.h"
-
-int xyz_Process(Backend *back, void *backhandle, Terminal *term);
-void xyz_ReceiveInit(Terminal *term);
-void xyz_StartSending(Terminal *term);
-void xyz_Cancel(Terminal *term);
+#include "xyzmodem.h"
 
 #ifndef NO_MULTIMON
 #include <multimon.h>
@@ -61,9 +57,9 @@ void xyz_Cancel(Terminal *term);
 #define IDM_PASTE     0x01A0
 #define IDM_SPECIALSEP 0x0200
 
-#define IDM_XYZSTART  0x0200
-#define IDM_XYZUPLOAD 0x0210
-#define IDM_XYZABORT  0x0220
+#define IDM_XYZDOWNLOAD 0x0200
+#define IDM_XYZUPLOAD   0x0210
+#define IDM_XYZABORT    0x0220
 
 #define IDM_SPECIAL_MIN 0x0400
 #define IDM_SPECIAL_MAX 0x0800
@@ -117,9 +113,6 @@ static void clear_full_screen(void);
 static void flip_full_screen(void);
 static void process_clipdata(HGLOBAL clipdata, int unicode);
 static void setup_clipboards(Terminal *, Conf *);
-
-void xyz_updateMenuItems(Terminal *term);
-void xyz_updateTitle(Terminal *term);
 
 /* Window layout information */
 static void reset_window(int);
@@ -746,12 +739,12 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
 			   == RESIZE_DISABLED) ? MF_GRAYED : MF_ENABLED,
 		       IDM_FULLSCREEN, "&Full Screen");
 	    AppendMenu(m, MF_SEPARATOR, 0, 0);
-	    AppendMenu(m, term->xyz_transfering?MF_GRAYED:MF_ENABLED,
-		       IDM_XYZSTART, "&Zmodem Receive");
-	    AppendMenu(m, term->xyz_transfering?MF_GRAYED:MF_ENABLED,
-		       IDM_XYZUPLOAD, "Zmodem &Upload");
-	    AppendMenu(m, !term->xyz_transfering?MF_GRAYED:MF_ENABLED,
-		       IDM_XYZABORT, "Zmodem &Abort");
+	    AppendMenu(m, term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED,
+		       IDM_XYZDOWNLOAD, "X/Y/&ZModem Download");
+	    AppendMenu(m, term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED,
+		       IDM_XYZUPLOAD, "X/Y/ZModem &Upload");
+	    AppendMenu(m, !term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED,
+		       IDM_XYZABORT, "X/Y/ZModem &Abort");
 	    AppendMenu(m, MF_SEPARATOR, 0, 0);
 	    if (has_help())
 		AppendMenu(m, MF_ENABLED, IDM_HELP, "&Help");
@@ -837,7 +830,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
 	    if (!(IsWindow(logbox) && IsDialogMessage(logbox, &msg)))
 		DispatchMessageW(&msg);
 
-	    if (xyz_Process(back, backhandle, term))
+	    if (xyzmodem_handle(back, backhandle, term))
 		continue;
 
             /*
@@ -2423,20 +2416,20 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	  case IDM_FULLSCREEN:
 	    flip_full_screen();
 	    break;
-	  case IDM_XYZSTART:
-	    xyz_ReceiveInit(term);
-	    xyz_updateMenuItems(term);
-	    xyz_updateTitle(term);
+	  case IDM_XYZDOWNLOAD:
+	    xyzmodem_download(term);
+	    xyzmodem_update_menu(term);
+	    xyzmodem_update_title(term);
 	    break;
 	  case IDM_XYZUPLOAD:
-	    xyz_StartSending(term);
-	    xyz_updateMenuItems(term);
-	    xyz_updateTitle(term);
+	    xyzmodem_upload(term);
+	    xyzmodem_update_menu(term);
+	    xyzmodem_update_title(term);
 	    break;
 	  case IDM_XYZABORT:
-	    xyz_Cancel(term);
-	    xyz_updateMenuItems(term);
-	    xyz_updateTitle(term);
+	    xyzmodem_abort(term);
+	    xyzmodem_update_menu(term);
+	    xyzmodem_update_title(term);
 	    break;
 	  default:
 	    if (wParam >= IDM_SAVED_MIN && wParam < IDM_SAVED_MAX) {
@@ -5989,38 +5982,11 @@ void agent_schedule_callback(void (*callback)(void *, void *, int),
     PostMessage(hwnd, WM_AGENT_CALLBACK, 0, (LPARAM)c);
 }
 
-void xyz_updateMenuItems(Terminal *term)
+void xyzmodem_update_menu(Terminal *term)
 {
     HMENU m = GetSystemMenu(hwnd, FALSE);
-    EnableMenuItem(m, IDM_XYZSTART,
-		   term->xyz_transfering?MF_GRAYED:MF_ENABLED);
-    EnableMenuItem(m, IDM_XYZUPLOAD,
-		   term->xyz_transfering?MF_GRAYED:MF_ENABLED);
-    EnableMenuItem(m, IDM_XYZABORT,
-		   !term->xyz_transfering?MF_GRAYED:MF_ENABLED);
+    EnableMenuItem(m, IDM_XYZDOWNLOAD, term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(m, IDM_XYZUPLOAD,   term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED);
+    EnableMenuItem(m, IDM_XYZABORT,   !term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED);
 }
 
-void xyz_updateTitle(Terminal *term) {
-    char *new_title;
-
-    if (term->xyz_transfering) {
-	new_title = dupcat(get_window_title(NULL, TRUE), " (XModem transfer)");
-	if (new_title) {
-		set_icon(NULL, new_title);
-		set_title(NULL, new_title);
-		sfree(new_title);
-	}
-	return;
-    }
-
-    new_title = dupstr(get_window_title(NULL, TRUE));
-    if (new_title) {
-	char *p = strrchr(new_title, '(');
-	if (p) {
-		*(p - 1) = 0;
-		set_icon(NULL, new_title);
-		set_title(NULL, new_title);
-	}
-	sfree(new_title);
-    }
-}

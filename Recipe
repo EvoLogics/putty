@@ -243,7 +243,7 @@ GUITERM  = TERMINAL window windlg winctrls sizetip winprint winutils
 # Same thing on Unix.
 UXTERM   = TERMINAL uxcfg sercfg uxucs uxprint timing callback miscucs
 GTKTERM  = UXTERM gtkwin gtkcfg gtkdlg gtkfont gtkcols gtkmisc xkeysym
-	 + x11misc gtkcomm sessprep uxpzmodem
+	 + x11misc gtkcomm sessprep uxxyzmodem
 GTKMAIN  = gtkmain cmdline
 
 # Non-SSH back ends (putty, puttytel, plink).
@@ -300,9 +300,9 @@ U_BE_NOSSH = be_nos_s uxser nocproxy
 # X/GTK Unix app, [U] for command-line Unix app.
 
 putty    : [G] GUITERM NONSSH WINSSH W_BE_ALL WINMISC winx11 putty.res LIBS
-         + winpzmodem
+         + winxyzmodem
 puttytel : [G] GUITERM NONSSH W_BE_NOSSH WINMISC puttytel.res nogss LIBS
-         + winpzmodem
+         + winxyzmodem
 plink    : [C] winplink wincons NONSSH WINSSH W_BE_ALL logging WINMISC
          + winx11 plink.res winnojmp sessprep noterm LIBS
 pscp     : [C] pscp winsftp wincons WINSSH BE_SSH SFTP wildcard WINMISC

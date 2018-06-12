@@ -142,7 +142,7 @@ void dlg_coloursel_start(union control *ctrl, void *dlg,
 int dlg_coloursel_results(union control *ctrl, void *dlg,
 			  int *r, int *g, int *b) { return 0; }
 void dlg_refresh(union control *ctrl, void *dlg) { }
-int xyz_ReceiveData(Terminal *term, const char *buffer, int len) { return 0; }
+int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len) { return 0; }
 
 /* miscellany */
 void logevent(void *frontend, const char *msg) { }
@@ -180,11 +180,12 @@ Filename *platform_default_filename(const char *name)
 {
     if (!strcmp(name, "LogFileName"))
 	return filename_from_str("putty.log");
-    else if (!strcmp(name, "rzCommand"))
+    else if (!strcmp(name, "XYZModemDownloadCommand"))
 	return filename_from_str("rz");
-    else if (!strcmp(name, "szCommand"))
+    else if (!strcmp(name, "XYZModemUploadCommand"))
 	return filename_from_str("sz");
-    /* TODO: zDownloadDir */
+    else if (!strcmp(name, "XYZModemDownloadDir"))
+	return filename_from_str(getenv("HOME"));
     else
 	return filename_from_str("");
 }

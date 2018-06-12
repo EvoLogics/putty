@@ -756,14 +756,13 @@ void save_open_settings(void *sesskey, Conf *conf)
     write_setting_i(sesskey, "ConnectionSharingUpstream", conf_get_int(conf, CONF_ssh_connection_sharing_upstream));
     write_setting_i(sesskey, "ConnectionSharingDownstream", conf_get_int(conf, CONF_ssh_connection_sharing_downstream));
     wmap(sesskey, "SSHManualHostKeys", conf, CONF_ssh_manual_hostkeys, FALSE);
-    /* z-modem settings */
-    write_setting_filename(sesskey, "rzCommand", conf_get_filename(conf, CONF_rzcommand));
-    write_setting_s(sesskey, "rzOptions", conf_get_str(conf, CONF_rzoptions));
-    write_setting_filename(sesskey, "szCommand", conf_get_filename(conf, CONF_szcommand));
-    write_setting_s(sesskey, "szOptions", conf_get_str(conf, CONF_szoptions));
-    write_setting_s(sesskey, "rzRemoteCommand", conf_get_str(conf, CONF_rzremotecommand));
-    write_setting_i(sesskey, "rzRemoteCommandEnable", conf_get_int(conf, CONF_rzremotecommand_enable));
-    write_setting_filename(sesskey, "zDownloadDir", conf_get_filename(conf, CONF_zdownloaddir));
+    write_setting_filename(sesskey, "XYZModemDownloadCommand", conf_get_filename(conf, CONF_xyzmodem_download_command));
+    write_setting_s(sesskey, "XYZModemDownloadOptions", conf_get_str(conf, CONF_xyzmodem_download_options));
+    write_setting_filename(sesskey, "XYZModemUploadCommand", conf_get_filename(conf, CONF_xyzmodem_upload_command));
+    write_setting_s(sesskey, "XYZModemUploadOptions", conf_get_str(conf, CONF_xyzmodem_upload_options));
+    write_setting_s(sesskey, "XYZModemRemoteDownloadCommand", conf_get_str(conf, CONF_xyzmodem_remote_download_command));
+    write_setting_i(sesskey, "XYZModemRemoteDownloadCommandEnable", conf_get_int(conf, CONF_xyzmodem_remote_download_command_enable));
+    write_setting_filename(sesskey, "XYZModemDownloadDir", conf_get_filename(conf, CONF_xyzmodem_downloaddir));
 }
 
 void load_settings(const char *section, Conf *conf)
@@ -1219,14 +1218,13 @@ void load_open_settings(void *sesskey, Conf *conf)
     gppi(sesskey, "ConnectionSharingUpstream", 1, conf, CONF_ssh_connection_sharing_upstream);
     gppi(sesskey, "ConnectionSharingDownstream", 1, conf, CONF_ssh_connection_sharing_downstream);
     gppmap(sesskey, "SSHManualHostKeys", conf, CONF_ssh_manual_hostkeys);
-    /* z-modem settings */
-    gppfile(sesskey, "rzCommand", conf, CONF_rzcommand);
-    gpps(sesskey, "rzOptions", "-e -v", conf, CONF_rzoptions);
-    gppfile(sesskey, "szCommand", conf, CONF_szcommand);
-    gpps(sesskey, "szOptions", "-e -v", conf, CONF_szoptions);
-    gpps(sesskey, "rzRemoteCommand", "rz -e", conf, CONF_rzremotecommand);
-    gppi(sesskey, "rzRemoteCommandEnable", 1, conf, CONF_rzremotecommand_enable);
-    gppfile(sesskey, "zDownloadDir", conf, CONF_zdownloaddir);
+    gppfile(sesskey, "XYZModemDownloadCommand", conf, CONF_xyzmodem_download_command);
+    gpps(sesskey, "XYZModemDownloadOptions", "-e -v", conf, CONF_xyzmodem_download_options);
+    gppfile(sesskey, "XYZModemUploadCommand", conf, CONF_xyzmodem_upload_command);
+    gpps(sesskey, "XYZModemUploadOptions", "-e -v", conf, CONF_xyzmodem_upload_options);
+    gpps(sesskey, "XYZModemRemoteDownloadCommand", "rz -e", conf, CONF_xyzmodem_remote_download_command);
+    gppi(sesskey, "XYZModemRemoteDownloadCommandEnable", 1, conf, CONF_xyzmodem_remote_download_command_enable);
+    gppfile(sesskey, "XYZModemDownloadDir", conf, CONF_xyzmodem_downloaddir);
 }
 
 void do_defaults(const char *session, Conf *conf)
