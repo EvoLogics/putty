@@ -5,10 +5,8 @@
 #include <windows.h>
 #include <shlwapi.h>
 
-#include <assert.h>
 #include <time.h>
 
-#define MAX_UPLOAD_FILES 512
 #define PIPE_SIZE (64*1024)
 
 struct xyzmodem_t {
@@ -16,15 +14,7 @@ struct xyzmodem_t {
 	HANDLE read_stdout;
 	HANDLE read_stderr;
 	HANDLE write_stdin;
-	BOOL remote_command_sent;
 };
-
-static int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams);
-static int xyzmodem_check(Backend *back, void *backhandle, Terminal *term, int outerr);
-static void xyzmodem_done(Terminal *term);
-
-static char *get_program_path(void);
-static char *get_exe_name(const char *exe);
 
 char *get_program_path(void)
 {
@@ -45,14 +35,14 @@ char *get_program_path(void)
 	return putty_path;
 }
 
-char *get_exe_name(const char *exe)
+char *get_prog_name(const char *prog)
 {
 	static char cmd[MAX_PATH];
 
-	strncpy(cmd, exe, sizeof(cmd));
-	if (PathIsRelative(exe)) {
+	strncpy(cmd, prog, sizeof(cmd));
+	if (PathIsRelative(prog)) {
 		FILE *fp;
-		snprintf(cmd, sizeof(cmd), "%s\\%s", get_program_path(), exe);
+		snprintf(cmd, sizeof(cmd), "%s\\%s", get_program_path(), prog);
 		if ((fp = fopen(cmd, "r")) != NULL) {
 			fclose(fp);
 		}
@@ -61,54 +51,31 @@ char *get_exe_name(const char *exe)
 	return cmd;
 }
 
-
 void xyzmodem_done(Terminal *term)
 {
-	if (term->xyzmodem_xfer != 0) {
-		term->xyzmodem_xfer = 0;
-		xyzmodem_update_menu(term);
-		xyzmodem_update_title(term);
+	if (term->xyzmodem_xfer == 0)
+		return;
 
-		if (term->xyzmodem) {
-			DWORD exitcode = 0;
-			CloseHandle(term->xyzmodem->write_stdin);
-			Sleep(500);
-			CloseHandle(term->xyzmodem->read_stdout);
-			CloseHandle(term->xyzmodem->read_stderr);
+	term->xyzmodem_xfer = 0;
+	xyzmodem_update_ui(term);
 
-			GetExitCodeProcess(term->xyzmodem->pi.hProcess,&exitcode);
-			if (exitcode == STILL_ACTIVE) {
-				TerminateProcess(term->xyzmodem->pi.hProcess, 0);
-			}
-			sfree(term->xyzmodem);
-			term->xyzmodem = NULL;
+	if (term->xyzmodem) {
+		DWORD exitcode = 0;
+		CloseHandle(term->xyzmodem->write_stdin);
+		Sleep(500);
+		CloseHandle(term->xyzmodem->read_stdout);
+		CloseHandle(term->xyzmodem->read_stderr);
+
+		GetExitCodeProcess(term->xyzmodem->pi.hProcess,&exitcode);
+		if (exitcode == STILL_ACTIVE) {
+			TerminateProcess(term->xyzmodem->pi.hProcess, 0);
 		}
+		sfree(term->xyzmodem);
+		term->xyzmodem = NULL;
 	}
 }
 
-int xyzmodem_handle(Backend *back, void *backhandle, Terminal *term)
-{
-	if (conf_get_int(term->conf, CONF_xyzmodem_remote_download_command_enable) && back->protocol != PROT_RAW) {
-		if (term->xyzmodem && !term->xyzmodem->remote_command_sent) {
-			char *rz_remote = conf_get_str(term->conf, CONF_xyzmodem_remote_download_command);
-
-			back->send(backhandle, rz_remote, strlen(rz_remote));
-
-			switch (back->protocol) {
-				case PROT_SERIAL: back->send(backhandle, "\r", 1);   break;
-				case PROT_SSH: 	  back->send(backhandle, "\n", 1);   break;
-				case PROT_TELNET:
-				case PROT_RLOGIN: back->send(backhandle, "\r\n", 2); break;
-				default: assert(!"Wrong protocol");
-			}
-			term->xyzmodem->remote_command_sent = TRUE;
-		}
-	}
-
-	return xyzmodem_check(back, backhandle, term, 0) + xyzmodem_check(back, backhandle, term, 1);
-}
-
-static int xyzmodem_check(Backend *back, void *backhandle, Terminal *term, int outerr)
+int xyzmodem_check(Backend *back, void *backhandle, Terminal *term, int outerr)
 {
 	DWORD exitcode = 0;
 	DWORD bread, avail;
@@ -163,18 +130,6 @@ static int xyzmodem_check(Backend *back, void *backhandle, Terminal *term, int o
 	return 0;
 }
 
-void xyzmodem_download(Terminal *term)
-{
-	const char *prog = get_exe_name(filename_to_str(conf_get_filename(term->conf, CONF_xyzmodem_download_command)));
-	char *params = conf_get_str(term->conf, CONF_xyzmodem_download_options);
-	if (!xyzmodem_spawn(term, prog, params)) {
-		nonfatal("Unable to start receiving '%s' with parameters '%s': %s"
-			, prog, params, win_strerror(GetLastError()));
-	} else {
-		term->xyzmodem_xfer = 1;
-	}
-}
-
 void xyzmodem_upload(Terminal *term)
 {
 	OPENFILENAME fn;
@@ -214,24 +169,19 @@ void xyzmodem_upload(Terminal *term)
 				curparams += sprintf(curparams, " \"%s\\%s\"", filenames, p);
 			}
 		}
-		prog = get_exe_name(filename_to_str(conf_get_filename(term->conf, CONF_xyzmodem_upload_command)));
+		prog = get_prog_name(filename_to_str(conf_get_filename(term->conf, CONF_xyzmodem_upload_command)));
 
 		if (!xyzmodem_spawn(term, prog, full_params)) {
 			nonfatal("Unable to start sending '%s' with parameters '%s': %s"
-				, prog, full_params, win_strerror(GetLastError()));
+				, prog, full_params, xyzmodem_last_error());
 		} else {
 			term->xyzmodem_xfer = 1;
 		}
-		term->xyzmodem->remote_command_sent = FALSE;
+		term->xyzmodem_remote_command_sent = FALSE;
 	}
 }
 
-void xyzmodem_abort(Terminal *term)
-{
-	xyzmodem_done(term);
-}
-
-static int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
+int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
 {
 	STARTUPINFO si;
 	SECURITY_ATTRIBUTES sa;
@@ -240,7 +190,7 @@ static int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
 	
 	term->xyzmodem = (struct xyzmodem_t *)smalloc(sizeof(struct xyzmodem_t));
 	memset(term->xyzmodem, 0, sizeof(struct xyzmodem_t));
-	term->xyzmodem->remote_command_sent = TRUE;
+	term->xyzmodem_remote_command_sent = TRUE;
 
         /* Initialize security descriptor (Windows NT) */
 	if (osPlatformId == VER_PLATFORM_WIN32_NT)
@@ -360,27 +310,7 @@ int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len)
 	return 0 ;
 }
 
-void xyzmodem_update_title(Terminal *term) {
-    char *new_title;
-
-    if (term->xyzmodem_xfer) {
-	new_title = dupcat(get_window_title(NULL, TRUE), " (X/Y/ZModem transfer)");
-	if (new_title) {
-		set_icon(NULL, new_title);
-		set_title(NULL, new_title);
-		sfree(new_title);
-	}
-	return;
-    }
-
-    new_title = dupstr(get_window_title(NULL, TRUE));
-    if (new_title) {
-	char *p = strrchr(new_title, '(');
-	if (p) {
-		*(p - 1) = 0;
-		set_icon(NULL, new_title);
-		set_title(NULL, new_title);
-	}
-	sfree(new_title);
-    }
+const char* xyzmodem_last_error()
+{
+	return win_strerror(GetLastError());
 }

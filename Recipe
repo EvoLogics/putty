@@ -238,7 +238,7 @@ TERMINAL = terminal wcwidth ldiscucs logging tree234 minibidi
 
 # GUI front end and terminal emulator (putty, puttytel).
 GUITERM  = TERMINAL window windlg winctrls sizetip winprint winutils
-	 + wincfg sercfg winhelp winjump sessprep
+	 + wincfg sercfg winhelp winjump sessprep winxyzmodem
 
 # Same thing on Unix.
 UXTERM   = TERMINAL uxcfg sercfg uxucs uxprint timing callback miscucs
@@ -247,7 +247,7 @@ GTKTERM  = UXTERM gtkwin gtkcfg gtkdlg gtkfont gtkcols gtkmisc xkeysym
 GTKMAIN  = gtkmain cmdline
 
 # Non-SSH back ends (putty, puttytel, plink).
-NONSSH   = telnet raw rlogin ldisc pinger
+NONSSH   = telnet raw rlogin ldisc pinger xyzmodem
 
 # SSH back end (putty, plink, pscp, psftp).
 SSH      = ssh sshcrc sshdes sshmd5 sshrsa sshrand sshsha sshblowf
@@ -300,11 +300,9 @@ U_BE_NOSSH = be_nos_s uxser nocproxy
 # X/GTK Unix app, [U] for command-line Unix app.
 
 putty    : [G] GUITERM NONSSH WINSSH W_BE_ALL WINMISC winx11 putty.res LIBS
-         + winxyzmodem
 puttytel : [G] GUITERM NONSSH W_BE_NOSSH WINMISC puttytel.res nogss LIBS
-         + winxyzmodem
 plink    : [C] winplink wincons NONSSH WINSSH W_BE_ALL logging WINMISC
-         + winx11 plink.res winnojmp sessprep noterm LIBS
+         + winx11 plink.res winnojmp sessprep noterm LIBS winxyzmodem
 pscp     : [C] pscp winsftp wincons WINSSH BE_SSH SFTP wildcard WINMISC
          + pscp.res winnojmp LIBS
 psftp    : [C] psftp winsftp wincons WINSSH BE_SSH SFTP wildcard WINMISC
@@ -331,7 +329,7 @@ puttytel : [X] GTKTERM uxmisc misc ldisc settings uxsel U_BE_NOSSH
 	 + nogss GTKMAIN
 
 plink    : [U] uxplink uxcons NONSSH UXSSH U_BE_ALL logging UXMISC uxsignal
-         + ux_x11 noterm uxnogtk sessprep cmdline
+         + ux_x11 noterm uxnogtk sessprep cmdline uxxyzmodem
 
 PUTTYGEN_UNIX = sshrsag sshdssg sshprime sshdes sshbn sshmd5 version
          + sshrand uxnoise sshsha MISC sshrsa sshdss uxcons uxstore uxmisc

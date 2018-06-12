@@ -2418,18 +2418,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	    break;
 	  case IDM_XYZDOWNLOAD:
 	    xyzmodem_download(term);
-	    xyzmodem_update_menu(term);
-	    xyzmodem_update_title(term);
+	    xyzmodem_update_ui(term);
 	    break;
 	  case IDM_XYZUPLOAD:
 	    xyzmodem_upload(term);
-	    xyzmodem_update_menu(term);
-	    xyzmodem_update_title(term);
+	    xyzmodem_update_ui(term);
 	    break;
 	  case IDM_XYZABORT:
 	    xyzmodem_abort(term);
-	    xyzmodem_update_menu(term);
-	    xyzmodem_update_title(term);
+	    xyzmodem_update_ui(term);
 	    break;
 	  default:
 	    if (wParam >= IDM_SAVED_MIN && wParam < IDM_SAVED_MAX) {
