@@ -13,6 +13,7 @@ void xyzmodem_update_menu(Terminal *term);
 void xyzmodem_update_title(Terminal *term);
 
 char* xyzmodem_upload_files_request();
+char* xyzmodem_upload_files_dragdrop(void *params, int* file_number_out);
 
 int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len);
 

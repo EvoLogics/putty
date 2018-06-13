@@ -41,39 +41,25 @@ void xyzmodem_download(Terminal *term)
 
 void xyzmodem_upload(Terminal *term, char* filelist)
 {
-	char full_params[32767];
-	char *p, *curparams;
+	char *params;
 	const char *prog;
 
 	if(!filelist || *filelist == 0)
 		return;
 
-	p = filelist;
+	params = dupcat(conf_get_str(term->conf, CONF_xyzmodem_upload_options), " ", filelist, NULL);
 
-	curparams = full_params;
-	full_params[0] = 0;
-
-	curparams += sprintf(curparams, "%s", conf_get_str(term->conf, CONF_xyzmodem_upload_options));
-
-	if (*(p + strlen(filelist) + 1) == 0) {
-		sprintf(curparams, " \"%s\"", filelist);
-	} else {
-		for (;;) {
-			p=p + strlen(p) + 1;
-			if (*p == 0)
-				break;
-			curparams += sprintf(curparams, " \"%s\\%s\"", filelist, p);
-		}
-	}
 	prog = get_prog_name(filename_to_str(conf_get_filename(term->conf, CONF_xyzmodem_upload_command)));
 
-	if (!xyzmodem_spawn(term, prog, full_params)) {
-		nonfatal("Unable to start sending '%s' with parameters '%s': %s"
-				, prog, full_params, xyzmodem_last_error());
-	} else {
+	if (xyzmodem_spawn(term, prog, params))
 		term->xyzmodem_xfer = 1;
-	}
+	else
+		nonfatal("Unable to start sending '%s' with parameters '%s': %s"
+				, prog, params, xyzmodem_last_error());
+
 	term->xyzmodem_remote_command_sent = FALSE;
+
+	sfree(params);
 }
 
 void xyzmodem_abort(Terminal *term)

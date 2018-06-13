@@ -2056,6 +2056,33 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	}
 	return 0;
       case WM_CREATE:
+	DragAcceptFiles(hwnd, TRUE);
+	break;
+      case WM_DROPFILES:
+        {
+            char *filelist;
+	    char *question;
+	    int file_number = 0;
+
+            if (term->xyzmodem_xfer)
+		break;
+
+            filelist = xyzmodem_upload_files_dragdrop(&wParam, &file_number);
+	    if (filelist == NULL)
+	        break;
+
+	    question = dupprintf("You want to upload files %d via X/Y/ZModem?",
+			    file_number);
+
+            if (MessageBox(hwnd, question, "X/Y/Modem upload",
+				MB_OKCANCEL | MB_DEFBUTTON1) == IDOK) {
+                    xyzmodem_upload(term, filelist);
+                    xyzmodem_update_ui(term);
+            }
+
+	    sfree(question);
+            sfree(filelist);
+	}
 	break;
       case WM_CLOSE:
 	{
@@ -5992,23 +6019,77 @@ void xyzmodem_update_menu(Terminal *term)
     EnableMenuItem(m, IDM_XYZABORT,   !term->xyzmodem_xfer ? MF_GRAYED : MF_ENABLED);
 }
 
-char* xyzmodem_upload_files_request(Terminal *term)
+char* xyzmodem_upload_files_request()
 {
-	OPENFILENAME of;
-	char *filelist = snewn(32000, char);
+     OPENFILENAME of;
+     char *p, *out;
+     /* FIXME: replace magic number 32000 */
+     char *filelist = snewn(32000, char);
 
-	memset(&of, 0, sizeof(of));
-	*filelist = '\0';
-	of.lStructSize = sizeof(of);
-	of.lpstrFile = filelist;
-	of.nMaxFile = 32000;
-	of.lpstrTitle = "Select files to upload...";
-	of.Flags = OFN_ALLOWMULTISELECT | OFN_CREATEPROMPT | OFN_ENABLESIZING |
-		   OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
+     memset(&of, 0, sizeof(of));
+     *filelist = '\0';
+     of.lStructSize = sizeof(of);
+     of.lpstrFile = filelist;
+     of.nMaxFile = 32000;
+     of.lpstrTitle = "Select files to upload...";
+     of.Flags = OFN_ALLOWMULTISELECT | OFN_CREATEPROMPT | OFN_ENABLESIZING |
+           OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_PATHMUSTEXIST;
 
-	if (!request_file(NULL, &of, TRUE, FALSE)) {
-		sfree(filelist);
-		return NULL;
-	}
-	return filelist;
+     if (!request_file(NULL, &of, TRUE, FALSE)) {
+         sfree(filelist);
+         return NULL;
+     }
+
+     p = filelist + strlen(filelist) + 1;
+
+     if (*p == 0)
+         out = dupprintf("\"%s\"", filelist);
+     else {
+         strbuf *strbuf_filelist = strbuf_new();
+
+         for (; *p != 0; p += strlen(p) + 1) {
+             strbuf_catf(strbuf_filelist, "\"%s\\%s\" ", filelist, p);
+    }
+
+         out = dupstr(strbuf_to_str(strbuf_filelist));
+         strbuf_free(strbuf_filelist);
+     }
+     sfree(filelist);
+
+     return out;
+}
+
+char* xyzmodem_upload_files_dragdrop(void *params, int* file_number_out)
+{
+    HDROP hDropInfo = NULL;
+    int file_number;
+    int i;
+    strbuf *strbuf_filelist;
+    char* filelist;
+
+    *file_number_out = 0;
+
+    hDropInfo = *(HDROP *)params; /* wParam */
+    file_number = DragQueryFile(hDropInfo, 0xffffffff, NULL, 0);
+    if (file_number <= 0)
+        return NULL;
+
+    strbuf_filelist = strbuf_new();
+    for (i = 0; i < file_number; i++) {
+	int buf_size = 0;
+	char* buf;
+
+	buf_size = DragQueryFile(hDropInfo, i, NULL, 0);
+	buf = snewn(++buf_size, char);
+
+	DragQueryFile(hDropInfo, i, buf, buf_size);
+	strbuf_catf(strbuf_filelist, "\"%s\" ", buf);
+
+	free(buf);
+    }
+
+    *file_number_out = file_number;
+    filelist = dupstr(strbuf_to_str(strbuf_filelist));
+    strbuf_free(strbuf_filelist);
+    return filelist;
 }
