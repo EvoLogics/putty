@@ -2870,6 +2870,10 @@ void setup_config_box(struct controlbox *b, int midsession,
 	    HELPCTX(xyzmodem_download_options),
 	    conf_editbox_handler, I(CONF_xyzmodem_download_options),
 	    I(2));
+    ctrl_checkbox(s, "Enable autodetect Zmodem download", 'z',
+	    HELPCTX(xyzmodem_download_autodetect),
+	    conf_checkbox_handler,
+	    I(CONF_xyzmodem_download_autodetect));
 
     s = ctrl_getset(b, "Connection/XYZModem", "upload",
 			"Upload command");

@@ -143,6 +143,8 @@ int dlg_coloursel_results(union control *ctrl, void *dlg,
 			  int *r, int *g, int *b) { return 0; }
 void dlg_refresh(union control *ctrl, void *dlg) { }
 int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len) { return 0; }
+int xyzmodem_download_autodetect(Terminal *term, char ch) { return 0; }
+int xyzmodem_download(Terminal *term) { return 0; }
 
 /* miscellany */
 void logevent(void *frontend, const char *msg) { }

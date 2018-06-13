@@ -111,3 +111,31 @@ void xyzmodem_update_title(Terminal *term) {
 	sfree(new_title);
     }
 }
+
+int xyzmodem_download_autodetect(Terminal *term, char ch)
+{
+	static char* matchstr = "**\030B00000000000000\r";
+	static char* p = NULL;
+
+	if (term->xyzmodem_xfer)
+		return 0;
+
+	if (!ch)
+		return 0;
+
+	if (!p)
+		p = matchstr;
+
+	if (ch != *p) {
+		p = matchstr;
+		return 0;
+	}
+
+	p++;
+	if (*p == '\0') {
+		p = matchstr;
+		return 1;
+	}
+
+	return 0;
+}

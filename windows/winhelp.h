@@ -161,6 +161,7 @@
 #define WINHELP_CTX_ssh_bugs_oldgex2 "ssh.bugs.oldgex2:config-ssh-bug-oldgex2"
 #define WINHELP_CTX_xyzmodem_download_command "xyzmodem:download-command"
 #define WINHELP_CTX_xyzmodem_download_options "xyzmodem:download-options"
+#define WINHELP_CTX_xyzmodem_download_autodetect "xyzmodem:download-autodetect"
 #define WINHELP_CTX_xyzmodem_upload_command "xyzmodem:upload-command"
 #define WINHELP_CTX_xyzmodem_upload_options "xyzmodem:upload-options"
 #define WINHELP_CTX_xyzmodem_remote_download_command "xyzmodem:remote-download-command"

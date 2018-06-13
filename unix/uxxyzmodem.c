@@ -8,3 +8,5 @@ void xyzmodem_done(Terminal *term) { }
 int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams) { return 0; }
 const char* xyzmodem_last_error() { return ""; }
 char *get_prog_name(const char *prog) { return ""; }
+
+void xyzmodem_update_menu(Terminal *term) { }

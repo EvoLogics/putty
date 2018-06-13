@@ -758,6 +758,7 @@ void save_open_settings(void *sesskey, Conf *conf)
     wmap(sesskey, "SSHManualHostKeys", conf, CONF_ssh_manual_hostkeys, FALSE);
     write_setting_filename(sesskey, "XYZModemDownloadCommand", conf_get_filename(conf, CONF_xyzmodem_download_command));
     write_setting_s(sesskey, "XYZModemDownloadOptions", conf_get_str(conf, CONF_xyzmodem_download_options));
+    write_setting_i(sesskey, "XYZModemDownloadAutodetect", conf_get_int(conf, CONF_xyzmodem_download_autodetect));
     write_setting_filename(sesskey, "XYZModemUploadCommand", conf_get_filename(conf, CONF_xyzmodem_upload_command));
     write_setting_s(sesskey, "XYZModemUploadOptions", conf_get_str(conf, CONF_xyzmodem_upload_options));
     write_setting_s(sesskey, "XYZModemRemoteDownloadCommand", conf_get_str(conf, CONF_xyzmodem_remote_download_command));
@@ -1220,6 +1221,7 @@ void load_open_settings(void *sesskey, Conf *conf)
     gppmap(sesskey, "SSHManualHostKeys", conf, CONF_ssh_manual_hostkeys);
     gppfile(sesskey, "XYZModemDownloadCommand", conf, CONF_xyzmodem_download_command);
     gpps(sesskey, "XYZModemDownloadOptions", "-e -v", conf, CONF_xyzmodem_download_options);
+    gppi(sesskey, "XYZModemDownloadAutodetect", 1, conf, CONF_xyzmodem_download_autodetect);
     gppfile(sesskey, "XYZModemUploadCommand", conf, CONF_xyzmodem_upload_command);
     gpps(sesskey, "XYZModemUploadOptions", "-e -v", conf, CONF_xyzmodem_upload_options);
     gpps(sesskey, "XYZModemRemoteDownloadCommand", "rz -e", conf, CONF_xyzmodem_remote_download_command);

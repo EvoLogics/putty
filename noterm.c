@@ -11,4 +11,3 @@ void set_title(void *frontend, char *t) { }
 void set_icon(void *frontend, char *t) { }
 char *get_window_title(void *frontend, int icon) { return "moo"; }
 
-void xyzmodem_update_menu(Terminal *term) { }

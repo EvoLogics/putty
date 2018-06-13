@@ -3008,6 +3008,12 @@ static void term_out(Terminal *term)
 	    unget = -1;
 	}
 
+	if (conf_get_int(term->conf, CONF_xyzmodem_download_autodetect))
+		if(xyzmodem_download_autodetect(term, c)) {
+			xyzmodem_download(term);
+			return;
+		}
+
 	/* Note only VT220+ are 8-bit VT102 is seven bit, it shouldn't even
 	 * be able to display 8-bit characters, but I'll let that go 'cause
 	 * of i18n.

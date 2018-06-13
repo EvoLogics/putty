@@ -21,6 +21,8 @@ const char* xyzmodem_last_error();
 int xyzmodem_check(Backend *back, void *backhandle, Terminal *term, int outerr);
 void xyzmodem_done(Terminal *term);
 
+int xyzmodem_download_autodetect(Terminal *term, char ch);
+
 char *get_program_path(void);
 char *get_prog_name(const char *prog);
 

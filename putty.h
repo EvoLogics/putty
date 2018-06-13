@@ -984,6 +984,7 @@ void cleanup_exit(int);
     /* Z modem options */ \
     X(FILENAME, NONE, xyzmodem_download_command) \
     X(STR, NONE, xyzmodem_download_options) \
+    X(INT, NONE, xyzmodem_download_autodetect) \
     X(FILENAME, NONE, xyzmodem_upload_command) \
     X(STR, NONE, xyzmodem_upload_options) \
     X(STR, NONE, xyzmodem_remote_download_command) \
