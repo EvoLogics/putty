@@ -153,24 +153,13 @@ int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
 	sa.bInheritHandle = TRUE; /* allow inheritable handles */
 
 	if (!CreatePipe(&newstdin, &write_stdin, &sa, PIPE_SIZE))
-	{
-		/* FIXME: free xyzmodem */
-		return 0;
-	}
+		goto xyzmodem_spawn_error1;
+
 	if (!CreatePipe(&read_stdout, &newstdout, &sa, PIPE_SIZE))
-	{
-		CloseHandle(newstdin);
-		CloseHandle(write_stdin);
-		return 0;
-	}
+		goto xyzmodem_spawn_error2;
+
 	if (!CreatePipe(&read_stderr, &newstderr, &sa, PIPE_SIZE))
-	{
-		CloseHandle(newstdin);
-		CloseHandle(write_stdin);
-		CloseHandle(newstdout);
-		CloseHandle(read_stdout);
-		return 0;
-	}
+		goto xyzmodem_spawn_error3;
 
 	/* set startupinfo for the spawned process */
 	GetStartupInfo(&si);
@@ -188,43 +177,19 @@ int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
 
 	if (!DuplicateHandle(GetCurrentProcess(), read_stdout, GetCurrentProcess(),
 				&term->xyzmodem->read_stdout, 0, FALSE, DUPLICATE_SAME_ACCESS))
-	{
-		CloseHandle(newstdin);
-		CloseHandle(write_stdin);
-		CloseHandle(newstdout);
-		CloseHandle(read_stdout);
-		CloseHandle(newstderr);
-		CloseHandle(read_stderr);
-		return 0;
-	}
+		goto xyzmodem_spawn_error4;
 
 	CloseHandle(read_stdout);
 
 	if (!DuplicateHandle(GetCurrentProcess(), read_stderr, GetCurrentProcess(),
 				&term->xyzmodem->read_stderr, 0, FALSE, DUPLICATE_SAME_ACCESS))
-	{
-		CloseHandle(newstdin);
-		CloseHandle(newstdout);
-		CloseHandle(read_stdout);
-		CloseHandle(write_stdin);
-		CloseHandle(newstderr);
-		CloseHandle(read_stderr);
-		return 0;
-	}
+		goto xyzmodem_spawn_error4;
 
 	CloseHandle(read_stderr);
 
 	if (!DuplicateHandle(GetCurrentProcess(), write_stdin, GetCurrentProcess(),
 				&term->xyzmodem->write_stdin, 0, FALSE, DUPLICATE_SAME_ACCESS))
-	{
-		CloseHandle(newstdin);
-		CloseHandle(write_stdin);
-		CloseHandle(newstdout);
-		CloseHandle(term->xyzmodem->read_stdout);
-		CloseHandle(newstderr);
-		CloseHandle(term->xyzmodem->read_stderr);
-		return 0;
-	}
+		goto xyzmodem_spawn_error5;
 
 	CloseHandle(write_stdin);
 
@@ -232,31 +197,48 @@ int xyzmodem_spawn(Terminal *term, const char *incommand, char *inparams)
 	if (!CreateProcess(incommand, inparams, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL,
 				filename_to_str(conf_get_filename(term->conf, CONF_xyzmodem_downloaddir)),
 				&si, &term->xyzmodem->pi))
-	{
-		CloseHandle(newstdin);
-		CloseHandle(term->xyzmodem->write_stdin);
-		CloseHandle(newstdout);
-		CloseHandle(term->xyzmodem->read_stdout);
-		CloseHandle(newstderr);
-		CloseHandle(term->xyzmodem->read_stderr);
-		return 0;
-	}
+		goto xyzmodem_spawn_error6;
 
 	CloseHandle(newstdin);
 	CloseHandle(newstdout);
 	CloseHandle(newstderr);
 
 	return 1;
+
+xyzmodem_spawn_error6:
+	CloseHandle(term->xyzmodem->write_stdin);
+
+xyzmodem_spawn_error5:
+	CloseHandle(term->xyzmodem->read_stdout);
+	CloseHandle(term->xyzmodem->read_stderr);
+
+xyzmodem_spawn_error4:
+	CloseHandle(newstderr);
+	CloseHandle(read_stderr);
+
+xyzmodem_spawn_error3:
+	CloseHandle(newstdout);
+	CloseHandle(read_stdout);
+
+xyzmodem_spawn_error2:
+	CloseHandle(newstdin);
+	CloseHandle(write_stdin);
+
+xyzmodem_spawn_error1:
+	sfree(term->xyzmodem);
+	term->xyzmodem = NULL;
+
+	return 0;
 }
 
 int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len)
 {
 	DWORD written;
+	BOOL rc = WriteFile(term->xyzmodem->write_stdin, buffer, len, &written, NULL);
+	if (rc == FALSE || written != len)
+		xyzmodem_done(term);
 
-	/* FIXME: handle errors */
-	WriteFile(term->xyzmodem->write_stdin, buffer, len, &written, NULL);
-
-	return 0 ;
+	return 0;
 }
 
 const char* xyzmodem_last_error()
