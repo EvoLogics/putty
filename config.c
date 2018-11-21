@@ -2855,36 +2855,50 @@ void setup_config_box(struct controlbox *b, int midsession,
 			  NULL);
     }
 
-    // z-modem panel
-    ctrl_settitle(b, "Connection/ZModem",
-	    "Options controlling Z Modem transfers");
+#ifdef _WINDOWS
+    /* TODO: now implemented only for windows */
+    ctrl_settitle(b, "Connection/XYZModem",
+	    "Options controlling X/Y/ZModem transfers");
 
-    s = ctrl_getset(b, "Connection/ZModem", "receive",
-	    "Receive command");
+    s = ctrl_getset(b, "Connection/XYZModem", "download",
+	    "Download command");
     ctrl_filesel(s, "Command:", NO_SHORTCUT,
-	    FILTER_EXE_FILES, FALSE, "Select command to receive zmodem data",
-	    HELPCTX(zmodem_rzcommand),
-	    conf_filesel_handler, I(CONF_rzcommand));
+	    FILTER_EXE_FILES, FALSE, "Select command to receive X/Y/ZModem data",
+	    HELPCTX(xyzmodem_download_command),
+	    conf_filesel_handler, I(CONF_xyzmodem_download_command));
     ctrl_editbox(s, "Options", NO_SHORTCUT, 50,
-	    HELPCTX(zmodem_rzoptions),
-	    conf_editbox_handler, I(CONF_rzoptions),
-	    I(50)); // TODO: I don't know what the last param does
+	    HELPCTX(xyzmodem_download_options),
+	    conf_editbox_handler, I(CONF_xyzmodem_download_options),
+	    I(2));
+    ctrl_checkbox(s, "Enable autodetect Zmodem download", 'z',
+	    HELPCTX(xyzmodem_download_autodetect),
+	    conf_checkbox_handler,
+	    I(CONF_xyzmodem_download_autodetect));
 
-    s = ctrl_getset(b, "Connection/ZModem", "send",
-			"Send command");
+    s = ctrl_getset(b, "Connection/XYZModem", "upload",
+			"Upload command");
     ctrl_filesel(s, "Command:", NO_SHORTCUT,
-	    FILTER_EXE_FILES, FALSE, "Select command to send zmodem data",
-	    HELPCTX(zmodem_szcommand),
-	    conf_filesel_handler, I(CONF_szcommand));
+	    FILTER_EXE_FILES, FALSE, "Select command to send X/Y/ZModem data",
+	    HELPCTX(xyzmodem_upload_command),
+	    conf_filesel_handler, I(CONF_xyzmodem_upload_command));
     ctrl_editbox(s, "Options", NO_SHORTCUT, 50,
-	    HELPCTX(zmodem_szoptions),
-	    conf_editbox_handler, I(CONF_szoptions),
-	    I(50)); // TODO: I don't know what the last param does
+	    HELPCTX(xyzmodem_upload_options),
+	    conf_editbox_handler, I(CONF_xyzmodem_upload_options),
+	    I(2));
+    ctrl_checkbox(s, "Enable sending remote command", 'r',
+	    HELPCTX(xyzmodem_remote_download_command_enable),
+	    conf_checkbox_handler,
+	    I(CONF_xyzmodem_remote_download_command_enable));
+    ctrl_editbox(s, "Remote command:", NO_SHORTCUT, 50,
+	    HELPCTX(xyzmodem_remote_download_command),
+	    conf_editbox_handler, I(CONF_xyzmodem_remote_download_command),
+	    I(2));
 
-    s = ctrl_getset(b, "Connection/ZModem", "download",
+    s = ctrl_getset(b, "Connection/XYZModem", "download",
 	    "Download folder");
     ctrl_directorysel(s, "Location:", NO_SHORTCUT,
 	    "Select location for downloading files",
-	    HELPCTX(zmodem_zdownloaddir),
-	    conf_directorysel_handler, I(CONF_zdownloaddir));
+	    HELPCTX(xyzmodem_downloaddir),
+	    conf_directorysel_handler, I(CONF_xyzmodem_downloaddir));
+#endif
 }

@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "putty.h"
 #include "terminal.h"
+#include "xyzmodem.h"
 
 #define poslt(p1,p2) ( (p1).y < (p2).y || ( (p1).y == (p2).y && (p1).x < (p2).x ) )
 #define posle(p1,p2) ( (p1).y < (p2).y || ( (p1).y == (p2).y && (p1).x <= (p2).x ) )
@@ -70,8 +71,6 @@
 const char *EMPTY_WINDOW_TITLE = "";
 
 const char sco2ansicolour[] = { 0, 4, 2, 6, 1, 5, 3, 7 };
-
-int xyz_ReceiveData(Terminal *term, const char *buffer, int len);
 
 #define sel_nl_sz  (sizeof(sel_nl)/sizeof(wchar_t))
 const wchar_t sel_nl[] = SEL_NL;
@@ -1727,8 +1726,8 @@ Terminal *term_init(Conf *myconf, struct unicode_data *ucsdata,
     term->n_mouse_select_clipboards = 1;
     term->mouse_paste_clipboard = CLIP_NULL;
 
-    term->xyz_transfering = 0;
-    term->xyz_Internals = NULL;
+    term->xyzmodem_xfer = 0;
+    term->xyzmodem = NULL;
     return term;
 }
 
@@ -3008,6 +3007,12 @@ static void term_out(Terminal *term)
 	    c = unget;
 	    unget = -1;
 	}
+
+	if (conf_get_int(term->conf, CONF_xyzmodem_download_autodetect))
+		if(xyzmodem_download_autodetect(term, c)) {
+			xyzmodem_download(term);
+			return;
+		}
 
 	/* Note only VT220+ are 8-bit VT102 is seven bit, it shouldn't even
 	 * be able to display 8-bit characters, but I'll let that go 'cause
@@ -6635,10 +6640,8 @@ int term_ldisc(Terminal *term, int option)
 
 int term_data(Terminal *term, int is_stderr, const void *data, int len)
 {
-    if (term->xyz_transfering && !is_stderr)
-    {
-	return xyz_ReceiveData(term, data, len);
-    }
+    if (term->xyzmodem_xfer && !is_stderr)
+	return xyzmodem_handle_receive(term, data, len);
     else
     {
 	bufchain_add(&term->inbuf, data, len);
