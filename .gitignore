@@ -148,3 +148,6 @@
 /windows/*.msi
 /windows/*.wixobj
 /windows/*.wixpdb
+tags
+cscope.out
+.*.sw?

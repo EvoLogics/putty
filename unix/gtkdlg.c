@@ -887,6 +887,10 @@ void dlg_label_change(union control *ctrl, void *dlg, char const *text)
 	gtk_label_set_text(GTK_LABEL(uc->label), text);
 	shortcut_highlight(uc->label, ctrl->fontselect.shortcut);
 	break;
+      case CTRL_DIRECTORYSELECT:
+	gtk_label_set_text(GTK_LABEL(uc->label), text);
+	shortcut_highlight(uc->label, ctrl->directoryselect.shortcut);
+	break;
       case CTRL_LISTBOX:
 	gtk_label_set_text(GTK_LABEL(uc->label), text);
 	shortcut_highlight(uc->label, ctrl->listbox.shortcut);
@@ -941,6 +945,29 @@ FontSpec *dlg_fontsel_get(union control *ctrl, void *dlg)
     return fontspec_new(gtk_entry_get_text(GTK_ENTRY(uc->entry)));
 }
 
+void dlg_directorysel_set(union control *ctrl, void *dlg, Filename *fn)
+{
+    struct dlgparam *dp = (struct dlgparam *)dlg;
+    struct uctrl *uc = dlg_find_byctrl(dp, ctrl);
+    /* We must copy fn->path before passing it to gtk_entry_set_text.
+     * See comment in dlg_editbox_set() for the reasons. */
+    char *duppath = dupstr(fn->path);
+    assert(uc->ctrl->generic.type == CTRL_DIRECTORYSELECT);
+    assert(uc->entry != NULL);
+    gtk_entry_set_text(GTK_ENTRY(uc->entry), duppath);
+    sfree(duppath);
+}
+
+Filename *dlg_directorysel_get(union control *ctrl, void *dlg)
+{
+    struct dlgparam *dp = (struct dlgparam *)dlg;
+    struct uctrl *uc = dlg_find_byctrl(dp, ctrl);
+    assert(uc->ctrl->generic.type == CTRL_DIRECTORYSELECT);
+    assert(uc->entry != NULL);
+    return filename_from_str(gtk_entry_get_text(GTK_ENTRY(uc->entry)));
+}
+
+
 /*
  * Bracketing a large set of updates in these two functions will
  * cause the front end (if possible) to delay updating the screen
@@ -975,6 +1002,7 @@ void dlg_set_focus(union control *ctrl, void *dlg)
         break;
       case CTRL_FILESELECT:
       case CTRL_FONTSELECT:
+      case CTRL_DIRECTORYSELECT:
       case CTRL_EDITBOX:
 	if (uc->entry) {
 	    /* Anything containing an edit box gets that focused. */
@@ -2130,10 +2158,11 @@ GtkWidget *layout_ctrls(struct dlgparam *dp, struct Shortcuts *scs,
             break;
           case CTRL_FILESELECT:
           case CTRL_FONTSELECT:
+          case CTRL_DIRECTORYSELECT:
             {
                 GtkWidget *ww;
                 const char *browsebtn =
-                    (ctrl->generic.type == CTRL_FILESELECT ?
+                    (ctrl->generic.type == CTRL_FILESELECT || CTRL_DIRECTORYSELECT ?
                      "Browse..." : "Change...");
 
                 gint percentages[] = { 75, 25 };
@@ -2148,6 +2177,8 @@ GtkWidget *layout_ctrls(struct dlgparam *dp, struct Shortcuts *scs,
 		    shortcut_add(scs, ww,
 				 (ctrl->generic.type == CTRL_FILESELECT ?
 				  ctrl->fileselect.shortcut :
+				  ctrl->generic.type == CTRL_DIRECTORYSELECT ?
+				  ctrl->directoryselect.shortcut :
 				  ctrl->fontselect.shortcut),
 				 SHORTCUT_UCTRL, uc);
 		    uc->label = ww;
@@ -2659,6 +2690,7 @@ int win_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 		break;
 	      case CTRL_FILESELECT:
 	      case CTRL_FONTSELECT:
+	      case CTRL_DIRECTORYSELECT:
 		/* File/font selectors have their buttons pressed (ooer),
 		 * and focus transferred to the edit box. */
 		g_signal_emit_by_name(G_OBJECT(sc->uc->button), "clicked");

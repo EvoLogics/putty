@@ -127,6 +127,8 @@ void dlg_filesel_set(union control *ctrl, void *dlg, Filename *fn) { }
 Filename *dlg_filesel_get(union control *ctrl, void *dlg) { return NULL; }
 void dlg_fontsel_set(union control *ctrl, void *dlg, FontSpec *fn) { }
 FontSpec *dlg_fontsel_get(union control *ctrl, void *dlg) { return NULL; }
+void dlg_directorysel_set(union control *ctrl, void *dlg, FontSpec *fn) { }
+FontSpec *dlg_directorysel_get(union control *ctrl, void *dlg) { return NULL; }
 void dlg_update_start(union control *ctrl, void *dlg) { }
 void dlg_update_done(union control *ctrl, void *dlg) { }
 void dlg_set_focus(union control *ctrl, void *dlg) { }
@@ -140,6 +142,9 @@ void dlg_coloursel_start(union control *ctrl, void *dlg,
 int dlg_coloursel_results(union control *ctrl, void *dlg,
 			  int *r, int *g, int *b) { return 0; }
 void dlg_refresh(union control *ctrl, void *dlg) { }
+int xyzmodem_handle_receive(Terminal *term, const char *buffer, int len) { return 0; }
+int xyzmodem_download_autodetect(Terminal *term, char ch) { return 0; }
+int xyzmodem_download(Terminal *term) { return 0; }
 
 /* miscellany */
 void logevent(void *frontend, const char *msg) { }
@@ -177,11 +182,12 @@ Filename *platform_default_filename(const char *name)
 {
     if (!strcmp(name, "LogFileName"))
 	return filename_from_str("putty.log");
-    else if (!strcmp(name, "rzCommand"))
+    else if (!strcmp(name, "XYZModemDownloadCommand"))
 	return filename_from_str("rz");
-    else if (!strcmp(name, "szCommand"))
+    else if (!strcmp(name, "XYZModemUploadCommand"))
 	return filename_from_str("sz");
-    /* TODO: zDownloadDir */
+    else if (!strcmp(name, "XYZModemDownloadDir"))
+	return filename_from_str(getenv("HOME"));
     else
 	return filename_from_str("");
 }

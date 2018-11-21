@@ -20,11 +20,11 @@ Filename *platform_default_filename(const char *name)
 {
     if (!strcmp(name, "LogFileName"))
 	return filename_from_str("putty.log");
-    else if (!strcmp(name, "rzCommand"))
+    else if (!strcmp(name, "XYZModemDownloadCommand"))
 	return filename_from_str("rz.exe");
-    else if (!strcmp(name, "szCommand"))
+    else if (!strcmp(name, "XYZModemUploadCommand"))
 	return filename_from_str("sz.exe");
-    else if (!strcmp(name, "zDownloadDir")) {
+    else if (!strcmp(name, "XYZModemDownloadDir")) {
 	char path[MAX_PATH+1];
 	char *result = "";
 
