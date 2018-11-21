@@ -30,6 +30,10 @@ void cleanup_exit(int code)
     exit(code);
 }
 
+void xyzmodem_update_menu(Terminal *term)
+{
+}
+
 void set_busy_status(void *frontend, int status)
 {
 }

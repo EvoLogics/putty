@@ -240,8 +240,9 @@ struct terminal_tag {
 
     unsigned long last_graphic_char;
 
-    int xyz_transfering;
-    struct zModemInternals *xyz_Internals;
+    int xyzmodem_xfer;
+    struct xyzmodem_t *xyzmodem;
+    int xyzmodem_remote_command_sent;
 
     /*
      * We maintain a full copy of a Conf here, not merely a pointer

@@ -982,11 +982,14 @@ void cleanup_exit(int);
     X(INT, NONE, crhaslf) \
     X(STR, NONE, winclass) \
     /* Z modem options */ \
-    X(FILENAME, NONE, rzcommand) \
-    X(STR, NONE, rzoptions) \
-    X(FILENAME, NONE, szcommand) \
-    X(STR, NONE, szoptions) \
-    X(FILENAME, NONE, zdownloaddir) \
+    X(FILENAME, NONE, xyzmodem_download_command) \
+    X(STR, NONE, xyzmodem_download_options) \
+    X(INT, NONE, xyzmodem_download_autodetect) \
+    X(FILENAME, NONE, xyzmodem_upload_command) \
+    X(STR, NONE, xyzmodem_upload_options) \
+    X(STR, NONE, xyzmodem_remote_download_command) \
+    X(INT, NONE, xyzmodem_remote_download_command_enable) \
+    X(FILENAME, NONE, xyzmodem_downloaddir) \
 
 /* Now define the actual enum of option keywords using that macro. */
 #define CONF_ENUM_DEF(valtype, keytype, keyword) CONF_ ## keyword,

@@ -486,7 +486,7 @@ void ctrl_free(union control *ctrl)
 	sfree(ctrl->fileselect.title);
 	break;
       case CTRL_DIRECTORYSELECT:
-	sfree(ctrl->fileselect.title);
+	sfree(ctrl->directoryselect.title);
 	break;
     }
     sfree(ctrl);
